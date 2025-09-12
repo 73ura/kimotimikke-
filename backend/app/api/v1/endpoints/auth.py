@@ -31,7 +31,9 @@ async def get_current_user(
         return user
     except Exception as e:
         logging.warning("Authentication failed", exc_info=e)
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication credentials"
+        )
 
 
 @router.post("/login", response_model=schemas.UserResponse)
