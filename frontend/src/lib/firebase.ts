@@ -1,5 +1,6 @@
+import { log, warn } from '@/utils/logger';
 import { getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 
 // CI環境ではFirebase認証をスキップ
 const isCI = process.env.CI === 'true';
@@ -17,11 +18,29 @@ const firebaseConfig = {
 };
 
 let app: any = null;
-let auth: any = null;
+let auth: Auth | null = null;
 
 if (!isCI && !skipFirebaseAuth) {
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+  app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   auth = getAuth(app);
+
+  // Firebase Auth Emulatorに接続（テスト実行時のみ）
+  const isTestEnvironment =
+    process.env.NODE_ENV === 'test' ||
+    process.env.NEXT_PUBLIC_USE_AUTH_EMULATOR === 'true' ||
+    (typeof window !== 'undefined' &&
+      window.location.hostname === 'localhost' &&
+      process.env.NEXT_PUBLIC_AUTH_EMULATOR_HOST);
+
+  if (isTestEnvironment) {
+    const host = process.env.NEXT_PUBLIC_AUTH_EMULATOR_HOST ?? 'localhost:9099';
+    try {
+      connectAuthEmulator(auth, `http://${host}`, { disableWarnings: true });
+      log('Connected to Firebase Auth Emulator');
+    } catch (error) {
+      warn('Failed to connect to Firebase Auth Emulator:', error);
+    }
+  }
 }
 
 export { auth };
