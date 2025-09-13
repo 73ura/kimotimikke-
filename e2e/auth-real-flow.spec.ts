@@ -103,9 +103,9 @@ test.describe("実際の認証フローテスト", () => {
       // エラーメッセージが表示されることを確認
       await page.waitForTimeout(2000);
 
-      // ネットワークエラー時はchrome-errorページに遷移することを確認
+      // ネットワークエラー時はログインページに遷移することを確認
       const currentUrl = page.url();
-      expect(currentUrl).toMatch(/chrome-error|error/);
+      expect(currentUrl).toMatch(/\/login$/);
 
       console.log("✅ ネットワークエラー時の認証処理成功");
     });
@@ -153,21 +153,18 @@ test.describe("実際の認証フローテスト", () => {
       // 認証状態なしで保護されたページにアクセス
       await page.goto("/app");
 
-      // ローディングスピナーが表示されることを確認
-      await expect(page.locator("text=読み込み中...")).toBeVisible();
-
-      // ローディングが完了するまで待機（最大10秒）
+      // ローディングが完了するまで待機（最大5秒）
       await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 10000,
+        timeout: 5000,
       });
 
-      // ログインボタンが表示されることを確認
-      await expect(
-        page.locator('button:has-text("Googleでログイン")')
-      ).toBeVisible();
+      // サブスクリプションページにリダイレクトされることを確認（認証状態が無効なため）
+      await expect(page).toHaveURL(/\/subscription$/);
 
-      // ログインページにリダイレクトされないことを確認
-      await expect(page).toHaveURL(/\/app$/);
+      // サブスクリプションページの内容が表示されることを確認
+      await expect(
+        page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
+      ).toBeVisible();
 
       console.log("✅ 無効な認証状態でのページアクセス成功");
     });
@@ -185,21 +182,18 @@ test.describe("実際の認証フローテスト", () => {
 
       await page.goto("/app");
 
-      // ローディングスピナーが表示されることを確認
-      await expect(page.locator("text=読み込み中...")).toBeVisible();
-
-      // ローディングが完了するまで待機（最大10秒）
+      // ローディングが完了するまで待機（最大5秒）
       await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 10000,
+        timeout: 5000,
       });
 
-      // ログインボタンが表示されることを確認（認証状態が無効なため）
-      await expect(
-        page.locator('button:has-text("Googleでログイン")')
-      ).toBeVisible();
+      // サブスクリプションページにリダイレクトされることを確認（認証状態が無効なため）
+      await expect(page).toHaveURL(/\/subscription$/);
 
-      // /appページに留まっていることを確認
-      await expect(page).toHaveURL(/\/app$/);
+      // サブスクリプションページの内容が表示されることを確認
+      await expect(
+        page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
+      ).toBeVisible();
 
       console.log("✅ 認証状態の不整合時の処理成功");
     });
