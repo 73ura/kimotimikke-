@@ -149,9 +149,7 @@ test.describe("実際の認証フローテスト", () => {
       console.log("✅ 認証タイムアウト時の処理成功");
     });
 
-    test.skip("無効な認証状態でのページアクセス", async ({ page }) => {
-      // TODO: アプリケーションの認証ロジックに問題あり
-      // AuthContextのisLoading状態管理が不適切で、認証状態チェックが永続的にローディング状態になる
+    test("無効な認証状態でのページアクセス", async ({ page }) => {
       // 認証状態なしで保護されたページにアクセス
       await page.goto("/app");
 
@@ -174,9 +172,7 @@ test.describe("実際の認証フローテスト", () => {
       console.log("✅ 無効な認証状態でのページアクセス成功");
     });
 
-    test.skip("認証状態の不整合時の処理", async ({ page }) => {
-      // TODO: アプリケーションの認証ロジックに問題あり
-      // AuthContextのisLoading状態管理が不適切で、認証状態チェックが永続的にローディング状態になる
+    test("認証状態の不整合時の処理", async ({ page }) => {
       // 無効な認証状態を設定
       await page.evaluate(() => {
         if (window.firebase && window.firebase.auth) {
