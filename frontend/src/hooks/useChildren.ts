@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getChildren } from '@/lib/api';
+import { useEffect, useState } from 'react';
 
 export interface Child {
   id: string;
@@ -20,7 +20,10 @@ export const useChildren = () => {
   useEffect(() => {
     const fetchChildren = async () => {
       if (!firebaseUser) {
-        setLoading(false);
+        // Firebase認証が利用できない場合は、空の配列を設定してローディングを終了
+        setChildren([]);
+        // 少し遅延させてローディングスピナーを表示
+        setTimeout(() => setLoading(false), 100);
         return;
       }
 
@@ -31,7 +34,11 @@ export const useChildren = () => {
         setChildren(childrenData);
       } catch (err) {
         console.error('Failed to fetch children:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch children');
+        setError(
+          err instanceof Error ? err.message : 'Failed to fetch children',
+        );
+        // エラー時も空の配列を設定
+        setChildren([]);
       } finally {
         setLoading(false);
       }
@@ -41,4 +48,4 @@ export const useChildren = () => {
   }, [firebaseUser]);
 
   return { children, loading, error };
-}; 
+};
