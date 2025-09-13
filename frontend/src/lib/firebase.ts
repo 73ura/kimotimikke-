@@ -6,6 +6,24 @@ import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 const isCI = process.env.CI === 'true';
 const skipFirebaseAuth = process.env.SKIP_FIREBASE_AUTH === 'true';
 
+// 本番環境での必須環境変数チェック
+const requiredKeys = [
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  'NEXT_PUBLIC_FIREBASE_APP_ID',
+];
+
+const isProdLike = process.env.NODE_ENV === 'production';
+if (!isCI && !skipFirebaseAuth && isProdLike) {
+  const missing = requiredKeys.filter((k) => !process.env[k]);
+  if (missing.length) {
+    throw new Error(
+      `[Firebase] Missing required env(s): ${missing.join(', ')}`,
+    );
+  }
+}
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'dummy-key',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dummy-domain',
