@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Firebase認証が利用できない場合（CI環境など）の処理
     if (!firebaseAuth) {
       log('Firebase auth not available, setting loading to false');
-      setIsLoading(false);
+      // 少し遅延させてローディングスピナーを表示
+      setTimeout(() => setIsLoading(false), 100);
       return;
     }
 
@@ -234,7 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
       if (tokenExpiry <= fiveMinutesFromNow) {
-        console.log('Token expires soon, refreshing...');
+        log('Token expires soon, refreshing...');
         await refreshToken();
       }
 
