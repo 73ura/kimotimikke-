@@ -1,4 +1,6 @@
 // 認証関連の型定義
+import type { User as FirebaseUser } from 'firebase/auth';
+import type { UserResponse } from './api';
 
 export interface AuthError {
   code: string;
@@ -8,8 +10,8 @@ export interface AuthError {
 }
 
 export interface AuthState {
-  user: any | null;
-  firebaseUser: any | null;
+  user: UserResponse | null;
+  firebaseUser: FirebaseUser | null;
   isLoading: boolean;
   error: AuthError | null;
 }
