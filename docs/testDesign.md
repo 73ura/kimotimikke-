@@ -788,21 +788,22 @@ npm run test:e2e
 #### **1. Firebase CLI のインストール**
 
 ```bash
-npm install -g firebase-tools
+# ローカルプロジェクトにインストール
+npm install firebase-tools --save-dev
 ```
 
 #### **2. Firebase プロジェクトの初期化**
 
 ```bash
 # プロジェクトルートで実行
-npx firebase-tools init
+npx firebase init
 ```
 
 #### **3. Firebase Auth Emulator の起動**
 
 ```bash
 # プロジェクトルートで実行
-npx firebase-tools emulators:start --only auth
+npx firebase emulators:start --only auth --project demo-project
 ```
 
 #### **4. E2E テストの実行**
