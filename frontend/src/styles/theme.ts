@@ -6,35 +6,35 @@
 // ===== カラーパレット =====
 // ブランドカラーとUI要素の色を定義
 export const colors = {
-  primary: '#ff6b6b',        // メインカラー（ピンク系）
-  primaryHover: '#ff5252',   // ホバー時のメインカラー
-  secondary: '#667eea',      // サブカラー（青系）
+  primary: '#ff6b6b', // メインカラー（ピンク系）
+  primaryHover: '#ff5252', // ホバー時のメインカラー
+  secondary: '#667eea', // サブカラー（青系）
   secondaryHover: '#764ba2', // ホバー時のサブカラー
   text: {
-    primary: '#333',         // メインテキスト色
-    secondary: '#666',       // サブテキスト色
-    white: '#ffffff',        // 白テキスト
-    error: '#e74c3c',        // エラーテキスト色
+    primary: '#333', // メインテキスト色
+    secondary: '#666', // サブテキスト色
+    white: '#ffffff', // 白テキスト
+    error: '#e74c3c', // エラーテキスト色
   },
   background: {
-    white: '#ffffff',        // 白背景
+    white: '#ffffff', // 白背景
     transparent: 'transparent', // 透明背景
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // グラデーション背景
-    light: '#f8f9fa',        // 薄い背景色
+    light: '#f8f9fa', // 薄い背景色
   },
   border: {
     light: 'rgba(255,255,255,0.5)', // 薄いボーダー
-    dark: '#333',                   // 濃いボーダー
+    dark: '#333', // 濃いボーダー
   },
   shadow: {
-    light: '0 4px 8px rgba(0,0,0,0.1)',           // 軽い影
-    medium: '0 4px 12px rgba(255,107,107,0.3)',   // 中程度の影
-    heavy: '0 8px 32px rgba(0,0,0,0.1)',          // 重い影
-    menu: '0 4px 12px rgba(0,0,0,0.15)',          // メニュー用の影
+    light: '0 4px 8px rgba(0,0,0,0.1)', // 軽い影
+    medium: '0 4px 12px rgba(255,107,107,0.3)', // 中程度の影
+    heavy: '0 8px 32px rgba(0,0,0,0.1)', // 重い影
+    menu: '0 4px 12px rgba(0,0,0,0.15)', // メニュー用の影
   },
   login: {
-    primary: '#4285F4',      // Googleログインボタン色
-    hover: '#3367D6',        // ホバー時のログインボタン色
+    primary: '#4285F4', // Googleログインボタン色
+    hover: '#3367D6', // ホバー時のログインボタン色
   },
 } as const;
 
@@ -44,9 +44,9 @@ export const emotionColorUtils = {
   // 強度による透明度（DB intensity テーブルの color_modifier カラム）
   // 注：実際の値はDBから取得するが、フォールバック用として定義
   intensityModifiers: {
-    1: 0.4,  // 薄い
-    2: 0.7,  // 中間
-    3: 1.0,  // 濃い
+    1: 0.4, // 薄い
+    2: 0.7, // 中間
+    3: 1.0, // 濃い
   },
 } as const;
 
@@ -64,11 +64,13 @@ interface RgbColor {
  */
 export function hexToRgb(hex: string): RgbColor | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 }
 
 /**
@@ -79,9 +81,12 @@ export function hexToRgb(hex: string): RgbColor | null {
  * @returns RGBA形式の色文字列
  */
 export function getEmotionColor(
-  baseColor: string, 
-  intensity: number, 
-  intensityModifiers: Record<number, number> = emotionColorUtils.intensityModifiers
+  baseColor: string,
+  intensity: number,
+  intensityModifiers: Record<
+    number,
+    number
+  > = emotionColorUtils.intensityModifiers,
 ): string {
   const rgb = hexToRgb(baseColor);
   if (!rgb) {
@@ -103,7 +108,10 @@ export function getEmotionColor(
 export function getEmotionColorFromData(
   emotionData: { color: string },
   intensity: number,
-  intensityModifiers: Record<number, number> = emotionColorUtils.intensityModifiers
+  intensityModifiers: Record<
+    number,
+    number
+  > = emotionColorUtils.intensityModifiers,
 ): string {
   return getEmotionColor(emotionData.color, intensity, intensityModifiers);
 }
@@ -113,46 +121,48 @@ export function getEmotionColorFromData(
  * @param emotionData - DBから取得した感情データ
  * @returns 強度選択が必要な場合はtrue
  */
-export function isIntensityRequired(emotionData: { is_intensity_required?: boolean }): boolean {
+export function isIntensityRequired(emotionData: {
+  is_intensity_required?: boolean;
+}): boolean {
   return emotionData.is_intensity_required !== false;
 }
 
 // ===== サイズとスペーシング =====
 // レイアウトの間隔を統一管理
 export const spacing = {
-  xs: '2px',   // 最小間隔（4px → 2px）
-  sm: '4px',   // 小間隔（8px → 4px）
-  md: '8px',   // 中間隔（16px → 8px）
-  lg: '12px',  // 大間隔（24px → 12px）
-  xl: '16px',  // 特大間隔（32px → 16px）
+  xs: '2px', // 最小間隔（4px → 2px）
+  sm: '4px', // 小間隔（8px → 4px）
+  md: '8px', // 中間隔（16px → 8px）
+  lg: '12px', // 大間隔（24px → 12px）
+  xl: '16px', // 特大間隔（32px → 16px）
   xxl: '24px', // 最大間隔（48px → 24px）
 } as const;
 
 // ===== ボーダーラジウス =====
 // 角丸のサイズを統一管理
 export const borderRadius = {
-  small: '4px',   // 小角丸（8px → 4px）
-  medium: '8px',  // 中角丸（16px → 8px）
-  large: '12px',  // 大角丸（20px → 12px）
+  small: '4px', // 小角丸（8px → 4px）
+  medium: '8px', // 中角丸（16px → 8px）
+  large: '12px', // 大角丸（20px → 12px）
   button: '16px', // ボタン用角丸（24px → 16px）
-  circle: '50%',  // 円形
+  circle: '50%', // 円形
 } as const;
 
 // ===== フォントサイズ =====
 // テキストサイズを統一管理（390px幅に適応）
 export const fontSize = {
-  small: '12px',     // 最小サイズ（14px → 12px）
-  base: '14px',      // 基本サイズ（16px → 14px）
-  large: '16px',     // 大文字（18px → 16px）
-  xl: '18px',        // 特大文字（20px → 18px）
-  xxl: '20px',       // 最大文字（24px → 20px）
+  small: '12px', // 最小サイズ（14px → 12px）
+  base: '14px', // 基本サイズ（16px → 14px）
+  large: '16px', // 大文字（18px → 16px）
+  xl: '18px', // 特大文字（20px → 18px）
+  xxl: '20px', // 最大文字（24px → 20px）
 } as const;
 
 // ===== アニメーション =====
 // トランジションとアニメーションを定義
 export const animation = {
   spin: 'spin 1s linear infinite', // 回転アニメーション（スピナー用）
-  transition: 'all 0.3s ease',     // 標準トランジション
+  transition: 'all 0.3s ease', // 標準トランジション
   transitionFast: 'all 0.2s ease', // 高速トランジション
 } as const;
 
@@ -173,7 +183,7 @@ export const commonStyles = {
   fullHeight: {
     minHeight: '100vh',
   },
-  
+
   // ページ全体のレイアウト
   page: {
     container: {
@@ -182,8 +192,11 @@ export const commonStyles = {
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'url("/images/background.webp") no-repeat center center',
+      backgroundImage: 'url("/images/background.webp")',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center center',
       backgroundSize: 'cover',
+      backgroundAttachment: 'fixed',
       overflow: 'hidden',
     },
     mainContent: {
@@ -204,7 +217,7 @@ export const commonStyles = {
       margin: `${spacing.lg} 0`,
     },
   },
-  
+
   // ハンバーガーメニュー関連
   menuButton: {
     position: 'fixed' as const,
@@ -252,7 +265,7 @@ export const commonStyles = {
     background: 'rgba(0, 0, 0, 0.3)',
     zIndex: 999,
   },
-  
+
   // ログイン画面関連
   login: {
     container: {
@@ -290,7 +303,7 @@ export const commonStyles = {
       transition: animation.transition,
     },
   },
-  
+
   // ローディング画面関連
   loading: {
     container: {
@@ -317,7 +330,7 @@ export const commonStyles = {
       marginBottom: spacing.md,
     },
   },
-  
+
   // ボタンスタイル
   button: {
     base: {
@@ -345,7 +358,7 @@ export const commonStyles = {
       fontSize: fontSize.small,
     },
   },
-  
+
   // カードスタイル
   card: {
     background: colors.background.white,
@@ -353,7 +366,7 @@ export const commonStyles = {
     boxShadow: colors.shadow.heavy,
     padding: spacing.xl,
   },
-  
+
   // ドロップダウンメニュー関連
   menu: {
     background: colors.background.white,
@@ -373,7 +386,7 @@ export const commonStyles = {
     color: colors.text.primary,
     transition: animation.transitionFast,
   },
-  
+
   // 汎用スピナー（ロード中のぐるぐる）
   spinner: {
     width: '40px',
@@ -388,8 +401,8 @@ export const commonStyles = {
 // ===== レスポンシブ対応 =====
 // デバイス別のブレークポイント
 export const breakpoints = {
-  mobile: '480px',   // スマートフォン
-  tablet: '768px',   // タブレット
+  mobile: '480px', // スマートフォン
+  tablet: '768px', // タブレット
   desktop: '1024px', // デスクトップ
 } as const;
 
@@ -398,4 +411,4 @@ export const mediaQueries = {
   mobile: `@media (max-width: ${breakpoints.mobile})`,
   tablet: `@media (max-width: ${breakpoints.tablet})`,
   desktop: `@media (min-width: ${breakpoints.desktop})`,
-} as const; 
+} as const;
