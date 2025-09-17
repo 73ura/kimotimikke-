@@ -7,26 +7,16 @@ import {
   KokoronDefault,
   Spinner,
 } from '@/components/ui';
-import { useAuth } from '@/contexts/AuthContext';
 import { useEmotionSelection } from '@/hooks/useEmotionSelection';
 import { commonStyles } from '@/styles/theme';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function EmotionSelectionPage() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   // カスタムフックを使用
   const { emotions, isLoadingEmotions, error } = useEmotionSelection();
-
-  // ユーザー認証チェック
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/');
-    }
-  }, [user, isLoading, router]);
 
   // 感情カードをクリックした時の処理
   const handleEmotionSelect = (emotionId: string) => {
@@ -53,21 +43,6 @@ export default function EmotionSelectionPage() {
   const handleBack = () => {
     router.push('/app');
   };
-
-  // ローディング中（認証）
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <Spinner size="medium" />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合
-  if (!user) {
-    return null;
-  }
 
   // エラー表示
   if (error) {
