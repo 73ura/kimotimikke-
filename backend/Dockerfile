@@ -26,5 +26,6 @@ COPY seed_db.py /app/seed_db.py
 COPY alembic.ini /app/alembic.ini
 COPY migrations/ /app/migrations/
 
-# TODO: 本番環境のときは --reload を外すこと
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Cloud Run用の最適化されたCMD
+# PORT環境変数を使用（Cloud Runが自動設定）
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 30
