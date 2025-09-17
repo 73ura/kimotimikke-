@@ -37,23 +37,31 @@ export default function AppHomePage() {
   useEffect(() => {
     // ローディング中は処理をスキップ
     if (subLoading || childrenLoading) {
-      console.log('ローディング中: 処理をスキップ');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ローディング中: 処理をスキップ');
+      }
       return;
     }
 
-    console.log('=== useEffect デバッグ ===');
-    console.log('needsSubscription:', needsSubscription);
-    console.log('needsSetup:', needsSetup);
-    console.log('has_subscription:', has_subscription);
-    console.log('status:', status);
-    console.log('children count:', children.length);
-    console.log('========================');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('=== useEffect デバッグ ===');
+      console.log('needsSubscription:', needsSubscription);
+      console.log('needsSetup:', needsSetup);
+      console.log('has_subscription:', has_subscription);
+      console.log('status:', status);
+      console.log('children count:', children.length);
+      console.log('========================');
+    }
 
     if (needsSubscription) {
-      console.log('リダイレクト: /subscription');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('リダイレクト: /subscription');
+      }
       router.push('/subscription');
     } else if (needsSetup) {
-      console.log('リダイレクト: /app/setup');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('リダイレクト: /app/setup');
+      }
       router.push('/app/setup');
     }
   }, [
