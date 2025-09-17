@@ -151,13 +151,18 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_teamb_db
           DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_teamb_db
           TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_teamb_db
-          PYTHONPATH: /home/runner/work/TeamB_FinalPJ/TeamB_FinalPJ/backend
+          PYTHONPATH: ${{ github.workspace }}/backend
           SKIP_FIREBASE_AUTH: true
         run: |
           # .envファイルを読み込んで環境変数を設定
           if [ -f .env ]; then
             export $(grep -v '^#' .env | xargs)
           fi
+          # 現在のディレクトリとPYTHONPATHを確認
+          pwd
+          echo "PYTHONPATH: $PYTHONPATH"
+          ls -la
+          # テスト実行
           pytest --cov=app --cov-report=xml --cov-report=html --cov-fail-under=0
 
       - name: Upload coverage reports
