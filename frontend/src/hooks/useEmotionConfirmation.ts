@@ -58,7 +58,11 @@ export const useEmotionConfirmation = () => {
           await Promise.all([
             fetch(API_ENDPOINTS.EMOTION_CARDS),
             fetch(API_ENDPOINTS.EMOTION_INTENSITIES),
-            fetch(API_ENDPOINTS.EMOTION_CHILDREN(user?.uid || '')),
+            fetch(API_ENDPOINTS.EMOTION_CHILDREN, {
+              headers: {
+                Authorization: `Bearer ${await firebaseUser!.getIdToken()}`,
+              },
+            }),
           ]);
 
         if (
@@ -227,7 +231,7 @@ export const useEmotionConfirmation = () => {
         headers: {
           'Content-Type': 'application/json',
           // NOTE: 認証トークンをヘッダーに含める必要がある
-          Authorization: `Bearer ${await firebaseUser?.getIdToken()}`,
+          Authorization: `Bearer ${await firebaseUser!.getIdToken()}`,
         },
         body: JSON.stringify({
           // user_idは送信しない（バックエンドで認証されたユーザーから取得）
