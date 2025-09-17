@@ -147,6 +147,28 @@ export default function LoginPage() {
               <p style={{ margin: 0, marginBottom: spacing.sm }}>
                 {error.userFriendlyMessage}
               </p>
+              {/* 開発環境でのみ技術的詳細を表示 */}
+              {process.env.NODE_ENV !== 'production' && (
+                <details
+                  style={{ marginTop: spacing.sm, fontSize: fontSize.small }}
+                >
+                  <summary style={{ cursor: 'pointer', color: '#666' }}>
+                    技術的詳細（開発環境のみ）
+                  </summary>
+                  <div style={{ marginTop: spacing.xs, textAlign: 'left' }}>
+                    <p>
+                      <strong>エラーコード:</strong> {error.code}
+                    </p>
+                    <p>
+                      <strong>技術的メッセージ:</strong> {error.message}
+                    </p>
+                    <p>
+                      <strong>再試行可能:</strong>{' '}
+                      {error.retryable ? 'はい' : 'いいえ'}
+                    </p>
+                  </div>
+                </details>
+              )}
               <button
                 onClick={clearError}
                 style={{
