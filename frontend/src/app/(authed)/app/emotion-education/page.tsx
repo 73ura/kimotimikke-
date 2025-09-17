@@ -1,35 +1,17 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { HamburgerMenu, KokoronDefault, SpeechBubble } from '@/components/ui';
+import { colors, commonStyles, fontSize, spacing } from '@/styles/theme';
 import { useRouter } from 'next/navigation';
-import { KokoronDefault, SpeechBubble, Spinner, HamburgerMenu } from '@/components/ui';
-import { commonStyles, colors, spacing, fontSize, borderRadius, animation } from '@/styles/theme';
 import { useState } from 'react';
 
 export default function EmotionEducationPage() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('what');
 
   const handleBack = () => {
     router.push('/app');
   };
-
-  // ローディング中（認証）
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <Spinner size="medium" />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合
-  if (!user) {
-    router.push('/');
-    return null;
-  }
 
   const educationContent = {
     what: {
@@ -48,12 +30,11 @@ export default function EmotionEducationPage() {
 
 ### 多様な感情を理解する
 
-怒りや悲しみといったネガティブな感情だけでなく、喜びや驚きなど多様な感情も理解し、言葉で表現できるようにすることで、共感力や信頼、社会的スキル全般の向上も期待できます。`
+怒りや悲しみといったネガティブな感情だけでなく、喜びや驚きなど多様な感情も理解し、言葉で表現できるようにすることで、共感力や信頼、社会的スキル全般の向上も期待できます。`,
     },
     importance: {
       title: 'なぜ大切なのか？',
-      content: 
-      `### 自己理解・自己肯定感の向上
+      content: `### 自己理解・自己肯定感の向上
 
 感情に気づき、名前をつけて表現できるようになることで、自己理解が深まり、「自分はこれでいい」と思える自己肯定感が育まれます。
 
@@ -69,11 +50,12 @@ export default function EmotionEducationPage() {
 
 幼児期から感情教育に取り組むことで、学びの姿勢、人間関係、仕事など、将来の社会的成功にも良い影響を与えることが研究でも示されています。
 
-これらは「学びに向かう力・人間性」として、「知識・技能」「思考力・判断力・表現力」と並び、学校教育の重要な目標とされています。`
-    }
+これらは「学びに向かう力・人間性」として、「知識・技能」「思考力・判断力・表現力」と並び、学校教育の重要な目標とされています。`,
+    },
   };
 
-  const currentContent = educationContent[activeSection as keyof typeof educationContent];
+  const currentContent =
+    educationContent[activeSection as keyof typeof educationContent];
 
   return (
     <div style={commonStyles.page.container}>
@@ -81,66 +63,84 @@ export default function EmotionEducationPage() {
       <HamburgerMenu />
 
       {/* 左上の戻るボタン */}
-      <button onClick={handleBack} style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        background: 'none',
-        border: 'none',
-        fontSize: '16px',
-        cursor: 'pointer',
-        padding: '6px',
-        borderRadius: '6px',
-        color: '#000000',
-        zIndex: 200,
-        fontWeight: 'bold',
-      }}>
+      <button
+        onClick={handleBack}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          background: 'none',
+          border: 'none',
+          fontSize: '16px',
+          cursor: 'pointer',
+          padding: '6px',
+          borderRadius: '6px',
+          color: '#000000',
+          zIndex: 200,
+          fontWeight: 'bold',
+        }}
+      >
         ← もどる
       </button>
 
       {/* メインコンテンツ */}
-      <div style={{
-        position: 'fixed',
-        top: '0',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        bottom: 0,
-        padding: '20px',
-        zIndex: 50,
-        boxSizing: 'border-box',
-        width: '100%',
-        maxWidth: '600px',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '20px',
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 0,
+          padding: '20px',
+          zIndex: 50,
+          boxSizing: 'border-box',
+          width: '100%',
+          maxWidth: '600px',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+        }}
+      >
         {/* タイトル */}
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          margin: '40px 0 20px 0',
-          color: '#333',
-        }}>
+        <h1
+          style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            margin: '40px 0 20px 0',
+            color: '#333',
+          }}
+        >
           感情教育について
         </h1>
 
         {/* ナビゲーションタブ */}
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '20px',
+          }}
+        >
           {Object.entries(educationContent).map(([key, content]) => (
             <button
               key={key}
               onClick={() => setActiveSection(key)}
               style={{
-                background: activeSection === key ? colors.primary : colors.background.light,
-                color: activeSection === key ? colors.text.white : colors.text.primary,
-                border: activeSection === key ? 'none' : `1px solid ${colors.border.light}`,
+                background:
+                  activeSection === key
+                    ? colors.primary
+                    : colors.background.light,
+                color:
+                  activeSection === key
+                    ? colors.text.white
+                    : colors.text.primary,
+                border:
+                  activeSection === key
+                    ? 'none'
+                    : `1px solid ${colors.border.light}`,
                 borderRadius: '20px',
                 padding: '8px 16px',
                 fontSize: '14px',
@@ -156,16 +156,18 @@ export default function EmotionEducationPage() {
 
         {/* コンテンツ表示 */}
         <div style={{ width: '100%', maxWidth: '500px' }}>
-          <h2 style={{
-            fontSize: fontSize.xl,
-            fontWeight: 'bold',
-            color: colors.text.primary,
-            marginBottom: spacing.md,
-            textAlign: 'center',
-          }}>
+          <h2
+            style={{
+              fontSize: fontSize.xl,
+              fontWeight: 'bold',
+              color: colors.text.primary,
+              marginBottom: spacing.md,
+              textAlign: 'center',
+            }}
+          >
             {currentContent.title}
           </h2>
-          
+
           <div style={{ textAlign: 'left' }}>
             <SpeechBubble text={currentContent.content} />
           </div>
@@ -177,10 +179,12 @@ export default function EmotionEducationPage() {
         </div>
 
         {/* 次のステップ */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: spacing.lg,
-        }}>
+        <div
+          style={{
+            textAlign: 'center',
+            marginTop: spacing.lg,
+          }}
+        >
           <button
             onClick={() => router.push('/app/emotion-selection')}
             style={{
@@ -194,7 +198,8 @@ export default function EmotionEducationPage() {
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = colors.primaryHover;
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255,107,107,0.4)';
+              e.currentTarget.style.boxShadow =
+                '0 4px 12px rgba(255,107,107,0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = colors.primary;
