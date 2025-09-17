@@ -3,7 +3,7 @@ import {
   AuthError,
   DEFAULT_AUTH_ERROR,
 } from '@/types/auth';
-import { error } from './logger';
+import { logAuthError as loggerLogAuthError } from './logger';
 
 /**
  * Firebase認証エラーを解析して適切なエラー情報を返す
@@ -91,19 +91,14 @@ export function isRetryableError(error: AuthError): boolean {
 }
 
 /**
- * エラーログを出力
+ * エラーログを出力（環境別）
  */
 export function logAuthError(
   authError: AuthError,
   context: string = 'Auth',
 ): void {
-  error(`[${context}] Auth Error:`, {
-    code: authError.code,
-    message: authError.message,
-    userFriendlyMessage: authError.userFriendlyMessage,
-    retryable: authError.retryable,
-    timestamp: new Date().toISOString(),
-  });
+  // logger.tsの環境別ログ関数を使用
+  loggerLogAuthError(authError, context);
 }
 
 /**
