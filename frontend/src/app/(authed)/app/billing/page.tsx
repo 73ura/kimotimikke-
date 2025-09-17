@@ -1,70 +1,44 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { BillingInfoContent, HamburgerMenu } from '@/components/ui';
+import { borderRadius, colors, fontSize, spacing } from '@/styles/theme';
 import { useRouter } from 'next/navigation';
-import { HamburgerMenu, BillingInfoContent } from '@/components/ui';
-import {
-  colors,
-  commonStyles,
-  spacing,
-  fontSize,
-  borderRadius,
-} from '@/styles/theme';
 
 export default function BillingHelpPage() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
-
-  // 認証チェック
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/');
-    }
-  }, [user, isLoading, router]);
 
   const handleBack = () => {
     router.push('/app/subscription');
   };
 
-  // ローディング中
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // 未認証の場合
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'url("/images/background.webp") no-repeat center center',
-      backgroundSize: 'cover',
-      backgroundAttachment: 'fixed',
-      overflow: 'auto',
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'url("/images/background.webp") no-repeat center center',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        overflow: 'auto',
+      }}
+    >
       {/* ハンバーガーメニュー */}
       <HamburgerMenu />
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        minHeight: '100vh',
-        padding: `${spacing.xl} ${spacing.lg}`,
-        paddingTop: '100px',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100vh',
+          padding: `${spacing.xl} ${spacing.lg}`,
+          paddingTop: '100px',
+        }}
+      >
         {/* 戻るボタン */}
         <button
           onClick={handleBack}
@@ -135,10 +109,12 @@ export default function BillingHelpPage() {
           </div>
 
           {/* サブスクリプション管理に戻るボタン */}
-          <div style={{
-            textAlign: 'center',
-            marginTop: spacing.lg,
-          }}>
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: spacing.lg,
+            }}
+          >
             <button
               onClick={() => router.push('/app/subscription')}
               style={{
@@ -166,4 +142,4 @@ export default function BillingHelpPage() {
       </div>
     </div>
   );
-} 
+}
