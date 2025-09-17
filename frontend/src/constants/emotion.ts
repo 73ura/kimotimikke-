@@ -25,8 +25,7 @@ export const INTENSITY_LEVELS = [
 export const API_ENDPOINTS = {
   EMOTION_CARDS: 'http://localhost:8000/emotion/cards',
   EMOTION_INTENSITIES: 'http://localhost:8000/emotion/intensities',
-  EMOTION_CHILDREN: (userId: string) =>
-    `http://localhost:8000/emotion/children/${userId}`,
+  EMOTION_CHILDREN: 'http://localhost:8000/emotion/children',
   EMOTION_LOGS: 'http://localhost:8000/emotion/logs',
 } as const;
 
