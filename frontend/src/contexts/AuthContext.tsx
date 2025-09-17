@@ -87,6 +87,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           log('4. Backend API call successful, setting user');
           setUser(backendUser);
           setError(null); // 成功時はエラーをクリア
+
+          // ID Tokenをクッキーに保存（middleware.tsで使用）
+          document.cookie = `firebase-id-token=${idToken}; path=/; max-age=3600; secure; samesite=strict`;
         } catch (error) {
           const authError = parseAuthError(error);
           logAuthError(authError, 'Backend Login');
@@ -188,6 +191,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // ローカル状態の更新は onAuthStateChanged に任せる
       await signOut(firebaseAuth);
       setError(null); // ログアウト成功時はエラーをクリア
+
+      // ID Tokenクッキーを削除
+      document.cookie =
+        'firebase-id-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     } catch (error) {
       const authError = parseAuthError(error);
       logAuthError(authError, 'Logout');
