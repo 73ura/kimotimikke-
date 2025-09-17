@@ -22,12 +22,16 @@ export const INTENSITY_LEVELS = [
 ] as const;
 
 // API エンドポイント
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+}
+
 export const API_ENDPOINTS = {
-  EMOTION_CARDS: 'http://localhost:8000/emotion/cards',
-  EMOTION_INTENSITIES: 'http://localhost:8000/emotion/intensities',
-  EMOTION_CHILDREN: (userId: string) =>
-    `http://localhost:8000/emotion/children/${userId}`,
-  EMOTION_LOGS: 'http://localhost:8000/emotion/logs',
+  EMOTION_CARDS: `${API_BASE_URL}/emotion/cards`,
+  EMOTION_INTENSITIES: `${API_BASE_URL}/emotion/intensities`,
+  EMOTION_CHILDREN: (userId: string) => `${API_BASE_URL}/api/v1/children`,
+  EMOTION_LOGS: `${API_BASE_URL}/emotion/logs`,
 } as const;
 
 // スワイプの閾値

@@ -1,49 +1,55 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useTodayEntry } from '@/hooks/useTodayEntry'
-import { useChildren } from '@/hooks/useChildren'
-import { useSubscription } from '@/hooks/useSubscription'
-import PrimaryButton from '@/components/ui/PrimaryButton'
-import Spinner from '@/components/ui/Spinner'
-import KokoronReadingReport from '@/components/ui/KokoronReadingReport'
-import SpeechBubble from '@/components/ui/SpeechBubble'
-import { colors, spacing, borderRadius, fontSize, commonStyles } from '@/styles/theme'
+import KokoronReadingReport from '@/components/ui/KokoronReadingReport';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import SpeechBubble from '@/components/ui/SpeechBubble';
+import Spinner from '@/components/ui/Spinner';
+import { useChildren } from '@/hooks/useChildren';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useTodayEntry } from '@/hooks/useTodayEntry';
+import {
+  borderRadius,
+  colors,
+  commonStyles,
+  fontSize,
+  spacing,
+} from '@/styles/theme';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function TodayEntryPage() {
-  const router = useRouter()
-  const { todayEntry, isLoading } = useTodayEntry()
-  const { loading: childrenLoading } = useChildren()
-  const { loading: subscriptionLoading } = useSubscription()
+  const router = useRouter();
+  const { todayEntry, isLoading } = useTodayEntry();
+  const { loading: childrenLoading } = useChildren();
+  const { loading: subscriptionLoading } = useSubscription();
 
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   // 今日の日付を取得
   const today = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'long'
-  })
+    weekday: 'long',
+  });
 
   // 記録の存在確認
-  const hasEntry = !!todayEntry
+  const hasEntry = !!todayEntry;
 
   // 更新処理
   const handleUpdate = async () => {
-    setIsUpdating(true)
+    setIsUpdating(true);
     try {
       // 感情選択画面から開始
-      router.push('/app/emotion-selection')
+      router.push('/app/emotion-selection');
     } catch (error) {
-      console.error('更新処理でエラーが発生しました:', error)
+      console.error('更新処理でエラーが発生しました:', error);
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }
+  };
 
   // キャラクターのセリフを生成
   const getCharacterSpeech = () => {
@@ -52,17 +58,17 @@ export default function TodayEntryPage() {
         `きょうのきろくがあるよ！`,
         `きもちをきろくしてみよう！`,
         `1にち1けんのせいやくがあるから、`,
-        `じゅうふくきろくはじどうてきにこうしんされるよ。`
-      ]
+        `じゅうふくきろくはじどうてきにこうしんされるよ。`,
+      ];
     } else {
       return [
         `きょうのきろくはまだないね。`,
         `きもちをきろくしてみよう！`,
         `1にち1けんのせいやくがあるから、`,
-        `じゅうふくきろくはじどうてきにこうしんされるよ。`
-      ]
+        `じゅうふくきろくはじどうてきにこうしんされるよ。`,
+      ];
     }
-  }
+  };
 
   // 感情カードの画像URLを取得
   const getEmotionImageUrl = (emotionCard?: { image_url: string }): string => {
@@ -71,45 +77,54 @@ export default function TodayEntryPage() {
   };
 
   // 強度に応じた感情画像URLを生成
-  const getIntensityBasedImageUrl = (emotionCard?: { label: string }, intensityId?: number): string => {
+  const getIntensityBasedImageUrl = (
+    emotionCard?: { label: string },
+    intensityId?: number,
+  ): string => {
     if (!emotionCard?.label) return '';
-    
+
     const EMOTION_NAME_TO_FILENAME: { [key: string]: string } = {
-      'うれしい': 'ureshii',
-      'かなしい': 'kanashii',
-      'こわい': 'kowai',
-      'おこり': 'ikari',
-      'びっくり': 'bikkuri',
-      'しんぱい': 'kinchou',
-      'はずかしい': 'hazukashii',
-      'こまった': 'komatta',
-      'わからない': 'wakaranai',
-      'あんしん': 'anshin',
-      'きんちょう': 'kinchou',
-      'ふゆかい': 'fuyukai',
-      'ゆかい': 'yukai'
+      うれしい: 'ureshii',
+      かなしい: 'kanashii',
+      こわい: 'kowai',
+      おこり: 'ikari',
+      びっくり: 'bikkuri',
+      しんぱい: 'kinchou',
+      はずかしい: 'hazukashii',
+      こまった: 'komatta',
+      わからない: 'wakaranai',
+      あんしん: 'anshin',
+      きんちょう: 'kinchou',
+      ふゆかい: 'fuyukai',
+      ゆかい: 'yukai',
     };
-    
+
     const baseName = EMOTION_NAME_TO_FILENAME[emotionCard.label] || 'ureshii';
     let fileName = baseName;
-    
+
     // 強度に応じてファイル名を変更
     if (intensityId === 1) {
-      fileName = `${baseName}1`; 
+      fileName = `${baseName}1`;
     } else if (intensityId === 3) {
-      fileName = `${baseName}3`; 
+      fileName = `${baseName}3`;
     }
-    
+
     return `/images/emotions/${fileName}.webp`;
   };
 
   // 感情と強度を組み合わせた画像表示
-  const renderEmotionWithIntensity = (emotionLabel: string, intensity: number) => {
+  const renderEmotionWithIntensity = (
+    emotionLabel: string,
+    intensity: number,
+  ) => {
     if (!emotionLabel) return null;
-    
+
     // 強度に応じた画像URLを生成
-    const intensityImageUrl = getIntensityBasedImageUrl({ label: emotionLabel }, intensity);
-    
+    const intensityImageUrl = getIntensityBasedImageUrl(
+      { label: emotionLabel },
+      intensity,
+    );
+
     return (
       <div
         style={{
@@ -134,7 +149,8 @@ export default function TodayEntryPage() {
           onError={(e) => {
             try {
               // エラー時はデフォルト画像を使用
-              (e.currentTarget as HTMLImageElement).src = '/images/emotions/ureshii.webp';
+              (e.currentTarget as HTMLImageElement).src =
+                '/images/emotions/ureshii.webp';
             } catch (_) {
               // no-op
             }
@@ -151,25 +167,32 @@ export default function TodayEntryPage() {
         console.error('todayEntry.idが存在しません');
         return null;
       }
-      
+
       // audioUrlが既に完全なURLの場合はそのまま返す
       if (audioUrl.startsWith('http')) {
         return audioUrl;
       }
-      
+
       // 相対パスの場合は、APIから取得を試みる
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/voice/records/${todayEntry.id}`);
-      
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!apiBaseUrl) {
+        throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+      }
+
+      const response = await fetch(
+        `${apiBaseUrl}/api/v1/voice/records/${todayEntry.id}`,
+      );
+
       if (!response.ok) {
         console.error('API呼び出し失敗:', response.status, response.statusText);
         return null;
       }
-      
+
       const data = await response.json();
-      
+
       // 該当する音声ファイルのダウンロードURLを探す
       const record = data.records.find((r: any) => r.audio_path === audioUrl);
-      
+
       return record?.audio_download_url || audioUrl;
     } catch (error) {
       console.error('音声ファイルURLの取得に失敗:', error);
@@ -189,12 +212,12 @@ export default function TodayEntryPage() {
       try {
         // ダウンロードURLを取得
         const downloadUrl = await getAudioDownloadUrl(audioUrl);
-        
+
         if (!downloadUrl) {
           console.error('音声ファイルのダウンロードURLが取得できません');
           return;
         }
-        
+
         const newAudio = new Audio(downloadUrl);
         newAudio.addEventListener('ended', () => {
           setIsPlaying(false);
@@ -205,7 +228,7 @@ export default function TodayEntryPage() {
           setIsPlaying(false);
           setAudio(null);
         });
-        
+
         await newAudio.play();
         setIsPlaying(true);
         setAudio(newAudio);
@@ -226,7 +249,7 @@ export default function TodayEntryPage() {
           データを読み込み中...
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -343,7 +366,7 @@ export default function TodayEntryPage() {
               >
                 {todayEntry.transcript || '音声メモがありません'}
               </div>
-              
+
               {/* 音声再生ボタン */}
               {todayEntry.audioUrl && (
                 <div
@@ -375,7 +398,7 @@ export default function TodayEntryPage() {
                   </button>
                 </div>
               )}
-              
+
               {/* 感情カード画像を右下に表示 */}
               {todayEntry.emotion && (
                 <div
@@ -391,7 +414,10 @@ export default function TodayEntryPage() {
                     backgroundColor: colors.background.white,
                   }}
                 >
-                  {renderEmotionWithIntensity(todayEntry.emotion, todayEntry.intensity)}
+                  {renderEmotionWithIntensity(
+                    todayEntry.emotion,
+                    todayEntry.intensity,
+                  )}
                 </div>
               )}
             </div>
@@ -569,5 +595,5 @@ export default function TodayEntryPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

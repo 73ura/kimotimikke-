@@ -1,38 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { HamburgerMenu, PrimaryButton, Spinner } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
-import { 
-  PrimaryButton, 
-  Spinner, 
-  HamburgerMenu
-} from '@/components/ui';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { commonStyles, colors, spacing, fontSize, borderRadius } from '@/styles/theme';
+import {
+  borderRadius,
+  colors,
+  commonStyles,
+  fontSize,
+  spacing,
+} from '@/styles/theme';
 
 export default function SubscriptionManagePage() {
   const { user, firebaseUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { 
-    has_subscription, 
-    status, 
-    is_trial, 
-    trial_expires_at, 
+  const {
+    has_subscription,
+    status,
+    is_trial,
+    trial_expires_at,
     cancel_at_period_end,
     loading: subLoading,
     error,
-    refetch
+    refetch,
   } = useSubscription();
-  
-  const [isCanceling, setIsCanceling] = useState(false);
 
+  const [isCanceling, setIsCanceling] = useState(false);
 
   const handleBack = () => {
     router.push('/app');
   };
-
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,25 +43,30 @@ export default function SubscriptionManagePage() {
   // サブスクリプション解約処理
   const handleCancelSubscription = async () => {
     if (!firebaseUser) return;
-    
+
     const confirmCancel = window.confirm(
-      'サブスクリプションを解約しますか？\n解約後も現在の請求期間の終了まではサービスをご利用いただけます。'
+      'サブスクリプションを解約しますか？\n解約後も現在の請求期間の終了まではサービスをご利用いただけます。',
     );
-    
+
     if (!confirmCancel) return;
 
     setIsCanceling(true);
     try {
       const idToken = await firebaseUser.getIdToken();
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!apiBaseUrl) {
+        throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+      }
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/cancel`,
+        `${apiBaseUrl}/api/v1/stripe/subscription/cancel`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${idToken}`,
+            Authorization: `Bearer ${idToken}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -72,7 +77,9 @@ export default function SubscriptionManagePage() {
       refetch(); // サブスクリプション状態を再取得
     } catch (error) {
       console.error('Cancellation error:', error);
-      alert('解約処理中にエラーが発生しました。しばらく時間をおいて再度お試しください。');
+      alert(
+        '解約処理中にエラーが発生しました。しばらく時間をおいて再度お試しください。',
+      );
     } finally {
       setIsCanceling(false);
     }
@@ -89,7 +96,7 @@ export default function SubscriptionManagePage() {
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -100,7 +107,7 @@ export default function SubscriptionManagePage() {
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -119,13 +126,13 @@ export default function SubscriptionManagePage() {
     return null;
   }
 
-
   const getStatusDisplay = () => {
     if (!has_subscription) {
       return {
         status: 'サブスクリプション未登録',
         color: colors.text.secondary,
-        description: 'サブスクリプションに登録して、すべての機能をお楽しみください。'
+        description:
+          'サブスクリプションに登録して、すべての機能をお楽しみください。',
       };
     }
 
@@ -134,13 +141,13 @@ export default function SubscriptionManagePage() {
         return {
           status: '無料トライアル中（解約予定）',
           color: '#ff6b6b',
-          description: `${trial_expires_at ? formatDate(trial_expires_at) : '不明'} にサービス終了予定です`
+          description: `${trial_expires_at ? formatDate(trial_expires_at) : '不明'} にサービス終了予定です`,
         };
       } else {
         return {
           status: '無料トライアル中',
           color: '#28a745',
-          description: `トライアル期間: ${trial_expires_at ? formatDate(trial_expires_at) : '不明'} まで`
+          description: `トライアル期間: ${trial_expires_at ? formatDate(trial_expires_at) : '不明'} まで`,
         };
       }
     }
@@ -149,7 +156,7 @@ export default function SubscriptionManagePage() {
       return {
         status: 'サブスクリプション登録中',
         color: '#28a745',
-        description: `${trial_expires_at ? formatPaidStartDate(trial_expires_at) : '不明'} より有料プランをご利用いただいております`
+        description: `${trial_expires_at ? formatPaidStartDate(trial_expires_at) : '不明'} より有料プランをご利用いただいております`,
       };
     }
 
@@ -157,14 +164,14 @@ export default function SubscriptionManagePage() {
       return {
         status: '解約済み',
         color: '#dc3545',
-        description: '現在の請求期間の終了まではサービスをご利用いただけます。'
+        description: '現在の請求期間の終了まではサービスをご利用いただけます。',
       };
     }
 
     return {
       status: status || '不明',
       color: colors.text.secondary,
-      description: 'サブスクリプション状態を確認中です。'
+      description: 'サブスクリプション状態を確認中です。',
     };
   };
 
@@ -198,84 +205,96 @@ export default function SubscriptionManagePage() {
 
       <div style={commonStyles.page.mainContent}>
         {/* タイトル */}
-        <h1 style={{
-          fontSize: fontSize.xxl,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          margin: '40px 0 20px 0',
-          color: colors.text.primary,
-        }}>
+        <h1
+          style={{
+            fontSize: fontSize.xxl,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            margin: '40px 0 20px 0',
+            color: colors.text.primary,
+          }}
+        >
           サブスクリプション管理
         </h1>
 
-
-
-
-
         {/* サブスクリプション状態表示 */}
-        <div style={{
-          backgroundColor: colors.background.white,
-          borderRadius: borderRadius.large,
-          padding: spacing.xl,
-          boxShadow: colors.shadow.medium,
-          marginBottom: spacing.lg,
-          maxWidth: '60vw',
-          width: '60vw',
-          overflow: 'auto',
-        }}>
-          <h2 style={{
-            fontSize: fontSize.xl,
-            fontWeight: 'bold',
-            marginBottom: spacing.md,
-            color: colors.text.primary,
-            textAlign: 'center',
-          }}>
+        <div
+          style={{
+            backgroundColor: colors.background.white,
+            borderRadius: borderRadius.large,
+            padding: spacing.xl,
+            boxShadow: colors.shadow.medium,
+            marginBottom: spacing.lg,
+            maxWidth: '60vw',
+            width: '60vw',
+            overflow: 'auto',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: fontSize.xl,
+              fontWeight: 'bold',
+              marginBottom: spacing.md,
+              color: colors.text.primary,
+              textAlign: 'center',
+            }}
+          >
             現在のステータス
           </h2>
 
-          <div style={{
-            textAlign: 'center',
-            marginBottom: spacing.lg,
-          }}>
-            <div style={{
-              fontSize: fontSize.large,
-              fontWeight: 'bold',
-              color: statusDisplay.color,
-              marginBottom: spacing.sm,
-            }}>
+          <div
+            style={{
+              textAlign: 'center',
+              marginBottom: spacing.lg,
+            }}
+          >
+            <div
+              style={{
+                fontSize: fontSize.large,
+                fontWeight: 'bold',
+                color: statusDisplay.color,
+                marginBottom: spacing.sm,
+              }}
+            >
               {statusDisplay.status}
             </div>
-            <div style={{
-              fontSize: fontSize.base,
-              color: colors.text.secondary,
-              lineHeight: 1.5,
-            }}>
+            <div
+              style={{
+                fontSize: fontSize.base,
+                color: colors.text.secondary,
+                lineHeight: 1.5,
+              }}
+            >
               {statusDisplay.description}
             </div>
           </div>
 
           {/* エラー表示 */}
           {error && (
-            <div style={{
-              backgroundColor: '#ffe6e6',
-              border: '1px solid #ffcccc',
-              borderRadius: borderRadius.small,
-              padding: spacing.md,
-              marginBottom: spacing.md,
-              color: '#d32f2f',
-              fontSize: fontSize.small,
-            }}>
+            <div
+              style={{
+                backgroundColor: '#ffe6e6',
+                border: '1px solid #ffcccc',
+                borderRadius: borderRadius.small,
+                padding: spacing.md,
+                marginBottom: spacing.md,
+                color: '#d32f2f',
+                fontSize: fontSize.small,
+              }}
+            >
               エラー: {error}
             </div>
           )}
 
           {/* アクション部分 */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: spacing.md,
-            alignItems: 'center',
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing.md,
+              alignItems: 'center',
+            }}
+          >
             {!has_subscription ? (
               // サブスクリプション未登録の場合
               <PrimaryButton
@@ -302,27 +321,34 @@ export default function SubscriptionManagePage() {
               </PrimaryButton>
             ) : cancel_at_period_end ? (
               // 解約予定の場合
-              <div style={{
-                textAlign: 'center',
-                padding: `${spacing.md} ${spacing.xl}`,
-                backgroundColor: '#fff3cd',
-                border: '1px solid #ffeaa7',
-                borderRadius: borderRadius.button,
-                minWidth: '200px',
-              }}>
-                <div style={{
-                  fontSize: fontSize.large,
-                  fontWeight: 'bold',
-                  color: '#856404',
-                  marginBottom: spacing.xs,
-                }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: `${spacing.md} ${spacing.xl}`,
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffeaa7',
+                  borderRadius: borderRadius.button,
+                  minWidth: '200px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: fontSize.large,
+                    fontWeight: 'bold',
+                    color: '#856404',
+                    marginBottom: spacing.xs,
+                  }}
+                >
                   解約手続き完了
                 </div>
-                <div style={{
-                  fontSize: fontSize.small,
-                  color: '#856404',
-                }}>
-                  {trial_expires_at ? formatDate(trial_expires_at) : '期間終了'} にサービス終了
+                <div
+                  style={{
+                    fontSize: fontSize.small,
+                    color: '#856404',
+                  }}
+                >
+                  {trial_expires_at ? formatDate(trial_expires_at) : '期間終了'}{' '}
+                  にサービス終了
                 </div>
               </div>
             ) : (
@@ -385,26 +411,32 @@ export default function SubscriptionManagePage() {
         </div>
 
         {/* 注意事項 */}
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          borderRadius: borderRadius.medium,
-          padding: spacing.md,
-          maxWidth: '500px',
-          width: '100%',
-          fontSize: fontSize.small,
-          color: colors.text.secondary,
-          lineHeight: 1.5,
-        }}>
+        <div
+          style={{
+            backgroundColor: '#f8f9fa',
+            borderRadius: borderRadius.medium,
+            padding: spacing.md,
+            maxWidth: '500px',
+            width: '100%',
+            fontSize: fontSize.small,
+            color: colors.text.secondary,
+            lineHeight: 1.5,
+          }}
+        >
           <ul style={{ margin: 0, paddingLeft: spacing.md }}>
-            <li>解約後も現在の請求期間終了まではサービスをご利用いただけます</li>
+            <li>
+              解約後も現在の請求期間終了まではサービスをご利用いただけます
+            </li>
             <li>再登録はいつでも可能です</li>
             <li>データは解約後も保持されます</li>
           </ul>
-                  {/* 詳細ヘルプページへのリンク */}
-          <div style={{
-            textAlign: 'center',
-            marginTop: spacing.lg,
-          }}>
+          {/* 詳細ヘルプページへのリンク */}
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: spacing.lg,
+            }}
+          >
             <button
               onClick={() => router.push('/app/billing')}
               style={{

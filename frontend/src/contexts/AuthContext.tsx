@@ -49,14 +49,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('3. ID token obtained, calling backend API');
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/login`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id_token: idToken }),
-            },
-          );
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+          if (!apiBaseUrl) {
+            throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+          }
+
+          const res = await fetch(`${apiBaseUrl}/api/v1/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: idToken }),
+          });
           if (!res.ok) throw new Error('Failed to login to backend');
           const backendUser = await res.json();
           console.log('4. Backend API call successful, setting user');

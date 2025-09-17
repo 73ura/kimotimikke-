@@ -7,7 +7,10 @@ export const verifyPayment = async (sessionId: string, firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(
       `${API_BASE_URL}/api/v1/stripe/session-status`,
@@ -36,7 +39,10 @@ export const verifyPayment = async (sessionId: string, firebaseUser: User) => {
 // チェックアウトセッション作成関数
 export const createCheckoutSession = async (idToken: string) => {
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const res = await fetch(`${API_BASE_URL}/api/v1/stripe/checkout-session`, {
       method: 'POST',
@@ -98,7 +104,10 @@ export const createChild = async (
 ) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/v1/children`, {
       method: 'POST',
@@ -128,7 +137,10 @@ export const createChild = async (
 export const getChildren = async (firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/v1/children`, {
       method: 'GET',
@@ -156,7 +168,10 @@ export const getChildren = async (firebaseUser: User) => {
 export const getChildrenCount = async (firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/v1/children/count`, {
       method: 'GET',
@@ -189,7 +204,10 @@ export const getEmotionLogs = async (
 ) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     let url = `${API_BASE_URL}/emotion/logs/list?limit=${limit}&offset=${offset}`;
     if (child_id) {
@@ -226,7 +244,10 @@ export const getEmotionLogsByDate = async (
 ) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     let url = `${API_BASE_URL}/emotion/logs/daily/${date}`;
     if (child_id) {
@@ -264,7 +285,10 @@ export const getEmotionLogsByMonth = async (
 ) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     let url = `${API_BASE_URL}/emotion/logs/monthly/${year}/${month}`;
     if (child_id) {
@@ -297,7 +321,10 @@ export const getEmotionLogsByMonth = async (
 export const getEmotionCards = async (firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/emotion/cards`, {
       method: 'GET',
@@ -333,7 +360,10 @@ export const updateChildProfile = async (
 ) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/v1/children/${childId}`, {
       method: 'PUT',
@@ -363,7 +393,10 @@ export const updateChildProfile = async (
 export const getIntensities = async (firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
 
     const response = await fetch(`${API_BASE_URL}/emotion/intensities`, {
       method: 'GET',

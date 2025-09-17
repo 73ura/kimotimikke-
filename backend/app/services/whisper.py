@@ -310,10 +310,10 @@ class WhisperService:
         model_to_use = self._get_cached_model()
 
         # 初期プロンプト（未指定なら子ども向け語彙を適用）
-        # 日本語音声の認識精度向上のため、子ども向け語彙の初期プロンプトを自動適用
+        # 繰り返し問題を回避するため、プロンプトを無効化
         if language == "ja" and not initial_prompt:
-            # 音声ファイルの場合は一般的な子ども向け語彙プロンプトを適用
-            initial_prompt = generate_whisper_prompt()
+            # 繰り返し問題を回避するため、プロンプトを使用しない
+            initial_prompt = None
 
         preprocessed = self._preprocess_audio(audio_file_path)
         remove_tmp = preprocessed != audio_file_path

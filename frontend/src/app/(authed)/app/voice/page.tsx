@@ -3,7 +3,11 @@
 import { AudioPlayer } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { borderRadius, colors, spacing } from '@/styles/theme';
-import { getAudioConstraints, getErrorMessage, selectRecorderConfig } from '@/utils/audio';
+import {
+  getAudioConstraints,
+  getErrorMessage,
+  selectRecorderConfig,
+} from '@/utils/audio';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -25,7 +29,10 @@ type TranscriptionResult = {
   processed_at: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+if (!API_BASE) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+}
 
 // メインコンポーネント（Suspenseでラップ）
 export default function VoiceEntryPage() {
@@ -46,10 +53,6 @@ function VoicePageContent() {
   const intensityLevel = searchParams.get('intensity');
   const childId = searchParams.get('child');
 
-  useEffect(() => {
-    console.log('[EMOTION]', { emotionId, intensityLevel });
-  }, [emotionId, intensityLevel]);
-
   const [checkingToday, setCheckingToday] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -58,10 +61,16 @@ function VoicePageContent() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [status, setStatus] = useState<string>('');
-  const [transcription, setTranscription] = useState<TranscriptionResult | null>(null);
+  const [transcription, setTranscription] =
+    useState<TranscriptionResult | null>(null);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
+    null,
+  );
 
   // 完了ステップ管理
-  const [completionStep, setCompletionStep] = useState<'recording' | 'completed' | 'finished'>('recording');
+  const [completionStep, setCompletionStep] = useState<
+    'recording' | 'completed' | 'finished'
+  >('recording');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -94,7 +103,8 @@ function VoicePageContent() {
       left: '50%',
       transform: 'translateX(-50%)',
       bottom: 0,
-      padding: 'max(10px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom)) 0',
+      padding:
+        'max(10px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom)) 0',
       zIndex: 50,
       boxSizing: 'border-box' as const,
       width: 'min(100vw, 430px)',
@@ -211,7 +221,12 @@ function VoicePageContent() {
       maxWidth: `${Math.min(LAYOUT.cardMaxWidth, LAYOUT.maxWidth)}px`,
       textAlign: 'center' as const,
     },
-    confirmTitle: { fontWeight: 700, marginBottom: 10, color: '#111827', fontSize: 18 },
+    confirmTitle: {
+      fontWeight: 700,
+      marginBottom: 10,
+      color: '#111827',
+      fontSize: 18,
+    },
     playButtonBase: {
       width: 200,
       height: 200,
@@ -334,7 +349,12 @@ function VoicePageContent() {
       maxWidth: `${Math.min(320, LAYOUT.maxWidth)}px`,
       textAlign: 'center' as const,
     },
-    bubbleTextSmall: { fontWeight: 700, fontSize: 14, lineHeight: 1.3, color: '#333' },
+    bubbleTextSmall: {
+      fontWeight: 700,
+      fontSize: 14,
+      lineHeight: 1.3,
+      color: '#333',
+    },
     characterWrap: {
       display: 'flex',
       flexDirection: 'column' as const,
@@ -388,14 +408,14 @@ function VoicePageContent() {
         const ymd = `${y}${m}${d}`;
 
         const hasToday = (data?.records ?? []).some((r: any) => {
-          if (Array.isArray(r?.created_at) && r.created_at[0]) return r.created_at[0] === ymd;
+          if (Array.isArray(r?.created_at) && r.created_at[0])
+            return r.created_at[0] === ymd;
           const name = String(r?.audio_path || '');
           const m2 = name.match(/audio_(\d{8})_/);
           return m2?.[1] === ymd;
         });
 
         if (hasToday) {
-          console.log('[INFO] 今日の記録が既に存在します。上書きモードで録音可能です。');
         }
       } catch (e: any) {
         setError(e?.message || '今日の記録確認に失敗しました');
@@ -405,8 +425,8 @@ function VoicePageContent() {
     };
     if (user) {
       checkToday();
-    } 
-  }, [user,router]);
+    }
+  }, [user, router]);
 
   // 録音開始
   const startRecording = async () => {
@@ -418,17 +438,26 @@ function VoicePageContent() {
       setIsPlaying(false);
       setCompletionStep('recording');
 
-      const stream = await navigator.mediaDevices.getUserMedia(getAudioConstraints());
+      const stream = await navigator.mediaDevices.getUserMedia(
+        getAudioConstraints(),
+      );
       streamRef.current = stream;
 
-      const rec = new MediaRecorder(stream, recConfig.mimeType ? { mimeType: recConfig.mimeType } : undefined);
+      const rec = new MediaRecorder(
+        stream,
+        recConfig.mimeType ? { mimeType: recConfig.mimeType } : undefined,
+      );
       mediaRecorderRef.current = rec;
       chunksRef.current = [];
 
-      rec.ondataavailable = (e) => e?.data && e.data.size > 0 && chunksRef.current.push(e.data);
-      rec.onerror = (ev) => setError(`録音エラー: ${(ev as any).error?.message || 'unknown'}`);
+      rec.ondataavailable = (e) =>
+        e?.data && e.data.size > 0 && chunksRef.current.push(e.data);
+      rec.onerror = (ev) =>
+        setError(`録音エラー: ${(ev as any).error?.message || 'unknown'}`);
       rec.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recConfig.contentType });
+        const blob = new Blob(chunksRef.current, {
+          type: recConfig.contentType,
+        });
         setAudioBlob(blob);
         stopStream();
         setStatus('');
@@ -437,7 +466,7 @@ function VoicePageContent() {
       rec.start();
       setIsRecording(true);
     } catch (err: any) {
-      console.error('[RECORDING] error', err);
+      console.error('Recording error:', err);
       stopStream();
       setError(getErrorMessage(err));
       setStatus('エラーが発生しました');
@@ -464,131 +493,204 @@ function VoicePageContent() {
 
   // 再生
   const togglePlay = async () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current) {
+      return;
+    }
+
     try {
+      // 音声要素の実際の状態で判断（isPlayingではなく）
       if (audioRef.current.paused) {
-        await audioRef.current.play();
-        setIsPlaying(true);
+        // 音声が終了している場合は最初から再生
+        if (audioRef.current.currentTime >= audioRef.current.duration) {
+          audioRef.current.currentTime = 0;
+        }
+
+        // 子ども向け：確実に再生されるまでリトライ
+        let playAttempts = 0;
+        const maxAttempts = 3;
+
+        const attemptPlay = async () => {
+          try {
+            playAttempts++;
+            await audioRef.current!.play();
+            setIsPlaying(true);
+          } catch (error: any) {
+            if (playAttempts < maxAttempts) {
+              // リトライ前に少し待つ
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              return attemptPlay();
+            } else {
+              // 最終的に失敗した場合は、ボタンの見た目だけ変更してユーザーに再クリックを促す
+              setIsPlaying(false);
+            }
+          }
+        };
+
+        await attemptPlay();
       } else {
         audioRef.current.pause();
         setIsPlaying(false);
       }
     } catch (e) {
-      console.error('playback error', e);
+      console.error('Audio playback error:', e);
+      setIsPlaying(false);
     }
   };
 
   useEffect(() => {
     const a = audioRef.current;
-    if (!a) return;
-    const onEnded = () => setIsPlaying(false);
+    if (!a || !audioBlob) return;
+
+    // isPlayingをリセット
+    setIsPlaying(false);
+
+    // 音声URLを明示的に設定
+    const audioUrl = URL.createObjectURL(audioBlob);
+    a.src = audioUrl;
+
+    const onEnded = () => {
+      setIsPlaying(false);
+    };
+
+    const onLoadedData = () => {};
+
     a.addEventListener('ended', onEnded);
-    return () => a.removeEventListener('ended', onEnded);
+    a.addEventListener('loadeddata', onLoadedData);
+
+    // 音声を事前に読み込む
+    a.load();
+
+    return () => {
+      a.removeEventListener('ended', onEnded);
+      a.removeEventListener('loadeddata', onLoadedData);
+      // URLオブジェクトを解放
+      URL.revokeObjectURL(audioUrl);
+    };
   }, [audioBlob]);
 
-  // 即座の完了画面表示 + バックグラウンド処理
+  // 高速化されたアップロード処理（並列実行 + プログレッシブ処理）
   const uploadAndSave = async () => {
     if (!audioBlob || !user) return;
     if (!emotionId || !intensityLevel || !childId) {
-      setError('感情データが不足しています。感情選択画面から再度お試しください。');
+      setError(
+        '感情データが不足しています。感情選択画面から再度お試しください。',
+      );
       return;
     }
 
     setIsBusy(true);
     setCompletionStep('completed');
-    setStatus('できた！');
+    // setStatus('できた！'); // 即座にありがとう画面を表示するため削除
 
+    // 即座に完了画面を表示（ユーザー体験の向上）
+    setTimeout(() => {
+      setCompletionStep('finished');
+      const redirectTo = searchParams.get('redirect') || '/app/voice/complete';
+      router.replace(redirectTo);
+    }, 2000);
+
+    // バックグラウンドで並列処理を実行
     try {
-      console.log('[UPLOAD] 開始 - パラメータ:', { emotionId, intensityLevel, childId });
-      
-      const health = await fetch(`${API_BASE}/api/v1/voice/health`);
-      if (!health.ok) throw new Error(`ヘルスチェック失敗: ${health.status}`);
-
-      console.log('[UPLOAD] ヘルスチェック成功');
-
-      const upRes = await fetch(`${API_BASE}/api/v1/voice/get-upload-url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user.id,
-          file_type: 'audio',
-          file_format: recConfig.ext,
+      // ヘルスチェックとアップロードURL取得を並列実行
+      const [healthRes, uploadUrlRes] = await Promise.all([
+        fetch(`${API_BASE}/api/v1/voice/health`),
+        fetch(`${API_BASE}/api/v1/voice/get-upload-url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            file_type: 'audio',
+            file_format: recConfig.ext,
+          }),
         }),
-      });
-      if (!upRes.ok) throw new Error(`アップロードURL取得失敗: ${upRes.status} ${await upRes.text()}`);
-      const upData: GetUploadUrlResponse = await upRes.json();
-      
-      console.log('[UPLOAD] アップロードURL取得成功:', upData.file_path);
+      ]);
 
-      const put = await fetch(upData.upload_url, {
+      if (!healthRes.ok)
+        throw new Error(`ヘルスチェック失敗: ${healthRes.status}`);
+      if (!uploadUrlRes.ok)
+        throw new Error(`アップロードURL取得失敗: ${uploadUrlRes.status}`);
+
+      const upData: GetUploadUrlResponse = await uploadUrlRes.json();
+      // S3アップロードを実行
+      const uploadResult = await fetch(upData.upload_url, {
         method: 'PUT',
         headers: { 'Content-Type': upData.content_type },
         body: audioBlob,
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorText = await res.text().catch(() => '');
+            console.error('S3 upload failed:', res.status, errorText);
+            throw new Error(`S3アップロード失敗: ${res.status} ${errorText}`);
+          }
+          return res;
+        })
+        .catch((error) => {
+          console.error('S3 upload exception:', error);
+          throw error;
+        });
+
+      // S3アップロード完了後、少し待ってから文字起こしを実行
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const transcribeResult = await fetch(
+        `${API_BASE}/api/v1/voice/transcribe`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            audio_file_path: upData.file_path,
+            language: 'ja',
+          }),
+        },
+      ).then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Transcription failed:', res.status, errorText);
+          throw new Error(`音声認識失敗: ${res.status} ${errorText}`);
+        }
+        const data = await res.json();
+        return data;
       });
-      if (!put.ok) throw new Error(`S3アップロード失敗: ${put.status} ${await put.text()}`);
-      
-      console.log('[UPLOAD] S3アップロード成功');
 
-      console.log('[TRANSCRIBE] 開始 - audio_file_path:', upData.file_path);
-
-      const tr = await fetch(`${API_BASE}/api/v1/voice/transcribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user.id,
-          audio_file_path: upData.file_path,
-          language: 'ja',
-        }),
-      });
-
-      if (!tr.ok) {
-        const errorText = await tr.text();
-        console.error('[TRANSCRIBE] エラー:', tr.status, errorText);
-        throw new Error(`音声認識失敗: ${tr.status} ${errorText}`);
-      }
-
-      const trData: TranscriptionResult = await tr.json();
-      console.log('[TRANSCRIBE] 成功 - 結果:', trData);
-      console.log('[TRANSCRIBE] テキスト:', trData.text);
-      console.log('[TRANSCRIBE] 信頼度:', trData.confidence);
+      const trData: TranscriptionResult = transcribeResult;
 
       setTranscription(trData);
-      
+
+      // データ保存をバックグラウンドで実行（ユーザーは既に完了画面を見ている）
       const audioPath = upData.file_path;
       const textPath = audioPath.replace('.webm', '.txt');
-      
-      console.log('[SAVE] 保存開始 - パス:', { audioPath, textPath });
-      console.log('[SAVE] voice_note:', trData.text || '');
 
-      const save = await fetch(`${API_BASE}/api/v1/voice/save-record`, {
+      // 保存処理を非同期で実行（エラーが発生してもユーザー体験に影響しない）
+      const saveData = {
+        user_id: user.id,
+        audio_file_path: audioPath,
+        text_file_path: textPath,
+        voice_note: trData.text || '',
+        emotion_card_id: emotionId,
+        intensity_id: intensityLevel,
+        child_id: childId,
+      };
+
+      fetch(`${API_BASE}/api/v1/voice/save-record`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user.id,
-          audio_file_path: audioPath,
-          text_file_path: textPath,
-          voice_note: trData.text || '',
-          emotion_card_id: emotionId,
-          intensity_id: intensityLevel,
-          child_id: childId,
-        }),
-      });
-
-      if (!save.ok) {
-        const saveError = await save.text();
-        console.error('[SAVE] 保存失敗:', save.status, saveError);
-        throw new Error(`記録保存失敗: ${save.status} ${saveError}`);
-      }
-
-      console.log('[SAVE] 保存成功');
-      
-      setCompletionStep('finished');
-      const redirectTo = searchParams.get('redirect') || '/app/voice/complete';
-      console.log('[REDIRECT] 遷移先:', redirectTo);
-      setTimeout(() => router.replace(redirectTo), 500);
-
+        body: JSON.stringify(saveData),
+      })
+        .then(async (save) => {
+          if (!save.ok) {
+            const saveError = await save.text();
+            console.error('Save failed:', save.status, saveError);
+            // エラーはログに記録するが、ユーザーには表示しない
+          } else {
+          }
+        })
+        .catch((error) => {
+          console.error('Save error:', error);
+        });
     } catch (e: any) {
-      console.error('[ERROR] upload/save', e);
+      console.error('Upload/save error:', e);
       setError(e?.message || 'エラーが発生しました');
     } finally {
       setIsBusy(false);
@@ -598,14 +700,28 @@ function VoicePageContent() {
   // ローディング系
   if (isLoading || !user) {
     return (
-      <main style={{ display: 'grid', placeItems: 'center', minHeight: '60vh', color: colors.text.secondary }}>
+      <main
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          minHeight: '60vh',
+          color: colors.text.secondary,
+        }}
+      >
         <p>読み込み中...</p>
       </main>
     );
   }
   if (checkingToday) {
     return (
-      <main style={{ display: 'grid', placeItems: 'center', minHeight: '60vh', color: colors.text.secondary }}>
+      <main
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          minHeight: '60vh',
+          color: colors.text.secondary,
+        }}
+      >
         <p>きょうの記録を確認中…</p>
       </main>
     );
@@ -613,15 +729,24 @@ function VoicePageContent() {
 
   if (!emotionId || !intensityLevel) {
     return (
-      <main style={{
-        maxWidth: 720,
-        margin: '0 auto',
-        padding: spacing.xl,
-        background: 'url("/images/background.webp") no-repeat center center',
-        backgroundSize: 'cover',
-        minHeight: '100vh',
-      }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: spacing.sm, color: colors.text.primary }}>
+      <main
+        style={{
+          maxWidth: 720,
+          margin: '0 auto',
+          padding: spacing.xl,
+          background: 'url("/images/background.webp") no-repeat center center',
+          backgroundSize: 'cover',
+          minHeight: '100vh',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: spacing.sm,
+            color: colors.text.primary,
+          }}
+        >
           感情データが不足しています
         </h1>
         <p style={{ marginBottom: spacing.md, color: colors.text.secondary }}>
@@ -648,12 +773,12 @@ function VoicePageContent() {
   if (completionStep === 'completed' || completionStep === 'finished') {
     return (
       <div style={layoutStyles.page}>
-        <AudioPlayer 
+        <AudioPlayer
           src="/sounds/characterAskReason04.mp3"
           autoPlay={true}
           volume={0.8}
-          onEnded={() => console.log('[AUDIO] 感情確認音声再生完了')}
-          onError={(error) => console.log('[AUDIO] 音声エラー:', error)}
+          onEnded={() => {}}
+          onError={(error) => console.error('Audio error:', error)}
         />
 
         <style>{`
@@ -668,7 +793,12 @@ function VoicePageContent() {
         `}</style>
 
         <main style={layoutStyles.panel}>
-          <div style={completionStyles.overlay} role="dialog" aria-live="polite" aria-label="完了">
+          <div
+            style={completionStyles.overlay}
+            role="dialog"
+            aria-live="polite"
+            aria-label="完了"
+          >
             <div style={completionStyles.waitCard}>
               <img
                 src="/images/kokoron/kokoron_mic.webp"
@@ -676,25 +806,7 @@ function VoicePageContent() {
                 style={completionStyles.waitKokoron}
               />
               <div style={completionStyles.waitBubble}>
-                {completionStep === 'completed' 
-                  ? 'きもちを きかせてくれて ありがとう✨'
-                  : 'こころんが よろこんでるよ！つぎの がめんにすすむよ... 🎉'
-                }
-              </div>
-              <div style={completionStyles.progressWrap}>
-                <div style={{
-                  ...completionStyles.progressBar,
-                  width: completionStep === 'completed' ? '60%' : '100%',
-                  background: completionStep === 'completed' 
-                    ? 'linear-gradient(90deg,rgb(250, 250, 55),rgb(222, 242, 121),rgb(132, 250, 6))'
-                    : 'linear-gradient(90deg,rgb(248, 165, 239),rgb(105, 235, 244),rgb(244, 84, 10))',
-                }} />
-              </div>
-              <div style={completionStyles.waitHint}>
-                {completionStep === 'completed' 
-                  ? 'しばらくすると つぎのがめんに すすむよ...'
-                  : 'まもなく つぎのがめんに すすむよ！'
-                }
+                きもちを きかせてくれて ありがとう✨
               </div>
             </div>
           </div>
@@ -706,12 +818,12 @@ function VoicePageContent() {
   // UI本体
   return (
     <div style={layoutStyles.page}>
-      <AudioPlayer 
+      <AudioPlayer
         src="/sounds/characterAskReason04.mp3"
         autoPlay={true}
         volume={0.8}
-        onEnded={() => console.log('[AUDIO] 感情確認音声再生完了')}
-        onError={(error) => console.log('[AUDIO] 音声エラー:', error)}
+        onEnded={() => {}}
+        onError={(error) => console.error('Audio error:', error)}
       />
 
       <style>{`
@@ -726,14 +838,22 @@ function VoicePageContent() {
       `}</style>
 
       <main style={layoutStyles.panel}>
-        <button onClick={handleBack} style={layoutStyles.backBtn}>← もどる</button>
+        <button onClick={handleBack} style={layoutStyles.backBtn}>
+          ← もどる
+        </button>
 
         <div style={commonStyles.bubbleSmall}>
-          <span style={commonStyles.bubbleTextSmall}>どうしてこのきもちになったのかな？</span>
+          <span style={commonStyles.bubbleTextSmall}>
+            どうしてこのきもちになったのかな？
+          </span>
         </div>
 
         <div style={commonStyles.characterWrap}>
-          <img src="/images/kokoron/kokoron_mic.webp" alt="マイクを持つこころん" style={commonStyles.characterImg} />
+          <img
+            src="/images/kokoron/kokoron_mic.webp"
+            alt="マイクを持つこころん"
+            style={commonStyles.characterImg}
+          />
         </div>
 
         {!audioBlob && (
@@ -744,7 +864,13 @@ function VoicePageContent() {
                 aria-label={isRecording ? '録音をとめる' : '録音をはじめる'}
                 style={recordingStyles.recordOuter}
               >
-                <div style={isRecording ? recordingStyles.recordInnerActive : recordingStyles.recordInnerIdle} />
+                <div
+                  style={
+                    isRecording
+                      ? recordingStyles.recordInnerActive
+                      : recordingStyles.recordInnerIdle
+                  }
+                />
                 {isRecording && (
                   <div style={recordingStyles.pauseIconWrap} aria-hidden="true">
                     <div style={recordingStyles.pauseBars}>
@@ -755,7 +881,9 @@ function VoicePageContent() {
                 )}
               </button>
             </div>
-            <div style={recordingStyles.recordHelper}>{isRecording ? 'とめる' : 'はなしてね'}</div>
+            <div style={recordingStyles.recordHelper}>
+              {isRecording ? 'とめる' : 'はなしてね'}
+            </div>
           </section>
         )}
 
@@ -767,7 +895,9 @@ function VoicePageContent() {
               onClick={togglePlay}
               style={{
                 ...confirmationStyles.playButtonBase,
-                ...(isPlaying ? confirmationStyles.playButtonActive : confirmationStyles.playButtonIdle),
+                ...(isPlaying
+                  ? confirmationStyles.playButtonActive
+                  : confirmationStyles.playButtonIdle),
               }}
               disabled={isBusy}
               aria-label={isPlaying ? 'とめる' : 'きく'}
@@ -775,14 +905,14 @@ function VoicePageContent() {
               <span>{isPlaying ? '⏸' : '▶'}</span>
             </button>
 
-            <audio
-              ref={audioRef}
-              src={audioBlob ? URL.createObjectURL(audioBlob) : undefined}
-              style={{ display: 'none' }}
-            />
+            <audio ref={audioRef} style={{ display: 'none' }} />
 
             <div style={confirmationStyles.confirmButtons}>
-              <button style={confirmationStyles.btnPrimary} onClick={uploadAndSave} disabled={isBusy}>
+              <button
+                style={confirmationStyles.btnPrimary}
+                onClick={uploadAndSave}
+                disabled={isBusy}
+              >
                 ✅ いい
               </button>
               <button
@@ -794,40 +924,10 @@ function VoicePageContent() {
             </div>
           </section>
         )}
-
-        {(status || error) && (
-          <div style={commonStyles.statusCard(!!error)}>
-            <div style={{ fontWeight: 700 }}>{status}</div>
-            {error && <div style={{ marginTop: 6 }}>{error}</div>}
-          </div>
-        )}
-
-        {transcription && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              border: '1px solid #e5e7eb',
-              background: '#fff',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-              width: '92%',
-              maxWidth: `${Math.min(LAYOUT.cardMaxWidth, LAYOUT.maxWidth)}px`,
-              textAlign: 'center' as const,
-            }}
-          >
-            <div style={{ fontWeight: 700, marginBottom: 6, color: '#111827' }}>文字起こし</div>
-            <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: '#111827' }}>
-              {transcription.text || '—'}
-            </div>
-            {typeof transcription.confidence === 'number' && (
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-                信頼度: {transcription.confidence >= 0 
-                  ? `${(transcription.confidence * 100).toFixed(1)}%`
-                  : `logprob: ${transcription.confidence.toFixed(3)}`
-                }
-              </div>
-            )}
+        {error && (
+          <div style={commonStyles.statusCard(true)}>
+            <div style={{ fontWeight: 700 }}>エラー</div>
+            <div style={{ marginTop: 6 }}>{error}</div>
           </div>
         )}
       </main>
