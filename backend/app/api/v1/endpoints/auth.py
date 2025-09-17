@@ -36,6 +36,17 @@ async def get_current_user(
         )
 
 
+@router.post("/verify-token")
+async def verify_token(token: HTTPAuthorizationCredentials = Security(security)):
+    """トークン検証API - Middleware用の軽量な認証チェック"""
+    try:
+        decoded_token = auth.verify_id_token(token.credentials)
+        return {"valid": True, "uid": decoded_token["uid"]}
+    except Exception as e:
+        logging.warning("Token verification failed", exc_info=e)
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
 @router.post("/login", response_model=schemas.UserResponse)
 async def login(token: schemas.Token, db: AsyncSession = Depends(get_db)):
     """ログインAPI - Firebase ID Tokenでユーザー認証"""
