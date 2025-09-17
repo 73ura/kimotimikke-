@@ -1,40 +1,15 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { HamburgerMenu, KokoronDefault, SpeechBubble } from '@/components/ui';
+import { colors, commonStyles, spacing } from '@/styles/theme';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { KokoronDefault, SpeechBubble, Spinner, HamburgerMenu } from '@/components/ui';
-import { commonStyles, colors, spacing, fontSize, borderRadius, animation } from '@/styles/theme';
 
 export default function PrivacyPage() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   const handleBack = () => {
     router.push('/app');
   };
-
-  // ログインしていない場合のリダイレクト
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/');
-    }
-  }, [user, isLoading, router]);
-
-  // ローディング中（認証）
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <Spinner size="medium" />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合は何も表示しない（useEffectでリダイレクトされる）
-  if (!user) {
-    return null;
-  }
 
   const privacyContent = `### プライバシーポリシー
 
@@ -98,54 +73,66 @@ export default function PrivacyPage() {
 最終更新日: 2025年8月`;
 
   return (
-    <div style={commonStyles.page.container}>
+    <div
+      style={{
+        ...commonStyles.page.container,
+        overflow: 'auto', // スクロール可能にするため
+      }}
+    >
       {/* ハンバーガーメニュー */}
       <HamburgerMenu />
 
       {/* 左上の戻るボタン */}
-      <button onClick={handleBack} style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        background: 'none',
-        border: 'none',
-        fontSize: '16px',
-        cursor: 'pointer',
-        padding: '6px',
-        borderRadius: '6px',
-        color: '#000000',
-        zIndex: 200,
-        fontWeight: 'bold',
-      }}>
+      <button
+        onClick={handleBack}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          background: 'none',
+          border: 'none',
+          fontSize: '16px',
+          cursor: 'pointer',
+          padding: '6px',
+          borderRadius: '6px',
+          color: '#000000',
+          zIndex: 200,
+          fontWeight: 'bold',
+        }}
+      >
         ← もどる
       </button>
 
       {/* メインコンテンツ */}
-      <div style={{
-        position: 'fixed',
-        top: '0',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        bottom: 0,
-        padding: '20px',
-        zIndex: 50,
-        boxSizing: 'border-box',
-        width: '100%',
-        maxWidth: '600px',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '20px',
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 0,
+          padding: '20px',
+          zIndex: 50,
+          boxSizing: 'border-box',
+          width: '100%',
+          maxWidth: '600px',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+        }}
+      >
         {/* タイトル */}
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          margin: '40px 0 20px 0',
-          color: '#333',
-        }}>
+        <h1
+          style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            margin: '40px 0 20px 0',
+            color: '#333',
+          }}
+        >
           プライバシーポリシー
         </h1>
 
@@ -160,10 +147,12 @@ export default function PrivacyPage() {
         </div>
 
         {/* 次のステップ */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: spacing.lg,
-        }}>
+        <div
+          style={{
+            textAlign: 'center',
+            marginTop: spacing.lg,
+          }}
+        >
           <button
             onClick={() => router.push('/app/emotion-selection')}
             style={{
@@ -177,7 +166,8 @@ export default function PrivacyPage() {
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = colors.primaryHover;
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255,107,107,0.4)';
+              e.currentTarget.style.boxShadow =
+                '0 4px 12px rgba(255,107,107,0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = colors.primary;
