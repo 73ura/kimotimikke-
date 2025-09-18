@@ -62,7 +62,7 @@ async def create_checkout_session(
     success_url = (
         "http://localhost:3000/app/payment/onboarding?session_id={CHECKOUT_SESSION_ID}"
     )
-    cancel_url = "http://localhost:3000/subscription"
+    cancel_url = "http://localhost:3000/pricing"
 
     # DBからStripe顧客IDを取得
     stripe_customer_id = (
