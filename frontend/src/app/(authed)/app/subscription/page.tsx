@@ -1,6 +1,7 @@
 'use client';
 
 import { HamburgerMenu, PrimaryButton, Spinner } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import {
 
 export default function SubscriptionManagePage() {
   const router = useRouter();
+  const { firebaseUser } = useAuth();
   const {
     has_subscription,
     status,
@@ -42,6 +44,9 @@ export default function SubscriptionManagePage() {
 
     setIsCanceling(true);
     try {
+      if (!firebaseUser) {
+        throw new Error('ユーザー情報が取得できません');
+      }
       const idToken = await firebaseUser.getIdToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/cancel`,
@@ -72,7 +77,7 @@ export default function SubscriptionManagePage() {
 
   // サブスクリプション再開処理
   const handleReactivateSubscription = () => {
-    router.push('/subscription');
+    router.push('/app/pricing');
   };
 
   // 日付フォーマット関数
