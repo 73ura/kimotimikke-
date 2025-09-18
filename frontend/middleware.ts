@@ -2,13 +2,14 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  console.log('=== Middleware実行開始 ===', request.nextUrl.pathname);
   const { pathname } = request.nextUrl;
 
   // 認証が必要なパス（(authed)グループ）
-  const protectedPaths = ['/app'];
+  const protectedPaths = ['/app', '/pricing'];
 
   // 認証が不要なパス（(public)グループ）
-  const publicPaths = ['/help', '/login', '/subscription'];
+  const publicPaths = ['/help', '/login'];
 
   // ルートパス
   const isRootPath = pathname === '/';
@@ -24,15 +25,13 @@ export async function middleware(request: NextRequest) {
   // Firebase ID Tokenをクッキーから取得
   const idToken = request.cookies.get('firebase-id-token')?.value;
 
-  // デバッグログ（開発環境のみ）
+  // デバッグログ（開発環境のみ、必要時のみ）
   if (process.env.NODE_ENV === 'development') {
     console.log('=== Middleware Debug ===');
     console.log('Pathname:', pathname);
     console.log('ID Token exists:', !!idToken);
-    console.log(
-      'All cookies:',
-      request.cookies.getAll().map((c) => c.name),
-    );
+    console.log('Is protected path:', isProtectedPath);
+    console.log('Is public path:', isPublicPath);
   }
 
   let isAuthenticated = false;
@@ -59,21 +58,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Is authenticated:', isAuthenticated);
-    console.log('==================');
-  }
-
   // 保護されたパスへのアクセス
   if (isProtectedPath) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        'Protected path accessed:',
+        pathname,
+        'isAuthenticated:',
+        isAuthenticated,
+      );
+    }
     if (!isAuthenticated) {
       // 認証されていない場合はログインページにリダイレクト
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Redirecting to login page from:', pathname);
+      }
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
-
-    // 認証されている場合はそのまま進む
     return NextResponse.next();
   }
 
