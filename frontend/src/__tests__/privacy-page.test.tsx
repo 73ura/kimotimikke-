@@ -1,9 +1,9 @@
 /// <reference types="vitest/globals" />
-import PrivacyPage from '../app/(authed)/app/privacy/page';
 import { useAuth } from '@/contexts/AuthContext';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { vi } from 'vitest';
+import PrivacyPage from '../app/(authed)/app/privacy/page';
 
 // モック
 vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
