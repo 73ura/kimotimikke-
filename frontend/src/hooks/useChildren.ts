@@ -32,13 +32,22 @@ export const useChildren = () => {
         setError(null);
         const childrenData = await getChildren(firebaseUser);
         setChildren(childrenData);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch children:', err);
-        setError(
-          err instanceof Error ? err.message : 'Failed to fetch children',
-        );
-        // エラー時も空の配列を設定
-        setChildren([]);
+
+        // Firebase quota exceeded の場合は特別処理
+        if (err?.code === 'auth/quota-exceeded') {
+          console.warn('Firebase quota exceeded - 空の配列を返します');
+          setChildren([]);
+          setError(
+            'Firebase quota exceeded - しばらく待ってから再試行してください',
+          );
+        } else {
+          setError(
+            err instanceof Error ? err.message : 'Failed to fetch children',
+          );
+          setChildren([]);
+        }
       } finally {
         setLoading(false);
       }
