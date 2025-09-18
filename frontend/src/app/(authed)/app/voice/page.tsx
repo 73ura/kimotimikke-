@@ -45,8 +45,8 @@ export default function VoiceEntryPage() {
 
 // 既存のコンポーネントをVoicePageContentにリネーム
 function VoicePageContent() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { user, isLoading } = useAuth();
 
   const searchParams = useSearchParams();
   const emotionId = searchParams.get('emotion');
@@ -383,20 +383,20 @@ function VoicePageContent() {
   };
 
   // 認証チェック
-  useEffect(() => {
-    if (!isLoading && !user) router.replace('/');
-  }, [isLoading, user, router]);
 
   // 今日の記録チェック
   useEffect(() => {
     const checkToday = async () => {
-      if (!user) return;
       if (!API_BASE) {
         setError('環境変数 NEXT_PUBLIC_API_BASE_URL が設定されていません');
         setCheckingToday(false);
         return;
       }
       try {
+        if (!user) {
+          setCheckingToday(false);
+          return;
+        }
         const res = await fetch(`${API_BASE}/api/v1/voice/records/${user.id}`);
         if (!res.ok) throw new Error(`records 取得失敗: ${res.status}`);
         const data = await res.json();
@@ -417,8 +417,10 @@ function VoicePageContent() {
 
         if (hasToday) {
         }
-      } catch (e: any) {
-        setError(e?.message || '今日の記録確認に失敗しました');
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : '今日の記録確認に失敗しました',
+        );
       } finally {
         setCheckingToday(false);
       }
@@ -431,6 +433,10 @@ function VoicePageContent() {
   // 録音開始
   const startRecording = async () => {
     try {
+      if (!user) {
+        setError('ユーザー情報が取得できません');
+        return;
+      }
       setError(null);
       setStatus('');
       setAudioBlob(null);
@@ -570,7 +576,7 @@ function VoicePageContent() {
 
   // 高速化されたアップロード処理（並列実行 + プログレッシブ処理）
   const uploadAndSave = async () => {
-    if (!audioBlob || !user) return;
+    if (!audioBlob) return;
     if (!emotionId || !intensityLevel || !childId) {
       setError(
         '感情データが不足しています。感情選択画面から再度お試しください。',
@@ -598,7 +604,7 @@ function VoicePageContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: user.id,
+            user_id: user!.id,
             file_type: 'audio',
             file_format: recConfig.ext,
           }),
@@ -639,7 +645,7 @@ function VoicePageContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: user.id,
+            user_id: user!.id,
             audio_file_path: upData.file_path,
             language: 'ja',
           }),
@@ -664,7 +670,7 @@ function VoicePageContent() {
 
       // 保存処理を非同期で実行（エラーが発生してもユーザー体験に影響しない）
       const saveData = {
-        user_id: user.id,
+        user_id: user!.id,
         audio_file_path: audioPath,
         text_file_path: textPath,
         voice_note: trData.text || '',
@@ -689,9 +695,9 @@ function VoicePageContent() {
         .catch((error) => {
           console.error('Save error:', error);
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Upload/save error:', e);
-      setError(e?.message || 'エラーが発生しました');
+      setError(e instanceof Error ? e.message : 'エラーが発生しました');
     } finally {
       setIsBusy(false);
     }

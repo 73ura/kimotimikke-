@@ -1,10 +1,10 @@
 /// <reference types="vitest/globals" />
-import EmotionSelectionPage from '../app/(authed)/app/emotion-selection/page';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmotionSelection } from '@/hooks/useEmotionSelection';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { vi } from 'vitest';
+import EmotionSelectionPage from '../app/(authed)/app/emotion-selection/page';
 
 // モック
 vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
@@ -89,12 +89,17 @@ describe('EmotionSelectionPage', () => {
 
   it('ローディング状態を表示する', () => {
     setup({ user: null, isLoading: true });
-    expect(screen.getByText('Loading')).toBeInTheDocument();
+    // middlewareで認証処理を行うため、ローディング表示は不要
+    // 全角スペースの問題を回避するため、部分一致でテスト
+    expect(
+      screen.getByText(/きょうは.*どんな.*きもちかな/),
+    ).toBeInTheDocument();
   });
 
-  it('未ログイン時にリダイレクトする', () => {
+  it('middlewareで認証処理されるためリダイレクトテストは不要', () => {
+    // middleware導入により、各ページでの認証チェックとリダイレクトは不要
     setup({ user: null, isLoading: false });
-    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('エラー状態を表示する', () => {

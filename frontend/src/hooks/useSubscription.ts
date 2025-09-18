@@ -22,7 +22,19 @@ export const useSubscription = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscriptionStatus = useCallback(async () => {
-    if (!firebaseUser) return;
+    if (!firebaseUser) {
+      // Firebase認証が利用できない場合は、デフォルト値を設定してローディングを終了
+      setSubscription({
+        has_subscription: false,
+        status: 'none',
+        is_trial: false,
+        is_paid: false,
+        trial_expires_at: null,
+      });
+      // 少し遅延させてローディングスピナーを表示
+      setTimeout(() => setLoading(false), 100);
+      return;
+    }
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!apiBaseUrl) {
@@ -63,6 +75,14 @@ export const useSubscription = () => {
       setSubscription(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
+      // エラー時もデフォルト値を設定
+      setSubscription({
+        has_subscription: false,
+        status: 'none',
+        is_trial: false,
+        is_paid: false,
+        trial_expires_at: null,
+      });
     } finally {
       setLoading(false);
     }

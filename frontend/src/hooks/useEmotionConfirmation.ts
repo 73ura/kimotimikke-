@@ -258,7 +258,7 @@ export const useEmotionConfirmation = () => {
         headers: {
           'Content-Type': 'application/json',
           // NOTE: 認証トークンをヘッダーに含める必要がある
-          Authorization: `Bearer ${await firebaseUser?.getIdToken()}`,
+          Authorization: `Bearer ${await firebaseUser!.getIdToken()}`,
         },
         body: JSON.stringify({
           // user_idは送信しない（バックエンドで認証されたユーザーから取得）

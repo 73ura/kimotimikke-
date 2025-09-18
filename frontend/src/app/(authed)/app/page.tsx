@@ -1,66 +1,33 @@
 // アプリ内トップページ
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useTodayEntry } from '@/hooks/useTodayEntry';
-import { useChildren } from '@/hooks/useChildren';
 import {
-  KokoronDefault,
-  SpeechBubble,
-  PrimaryButton,
   HamburgerMenu,
-  MenuItem,
+  KokoronDefault,
+  PrimaryButton,
+  SpeechBubble,
   Spinner,
 } from '@/components/ui';
-import {
-  colors,
-  commonStyles,
-  spacing,
-  fontSize,
-  borderRadius,
-} from '@/styles/theme';
+import { useChildren } from '@/hooks/useChildren';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useTodayEntry } from '@/hooks/useTodayEntry';
+import { colors, commonStyles, fontSize, spacing } from '@/styles/theme';
+import { useRouter } from 'next/navigation';
 
 export default function AppHomePage() {
-  const { user, logout, login, isLoading } = useAuth();
-  const { has_subscription, status, is_trial, trial_expires_at, loading: subLoading, error } = useSubscription();
-  const { todayEntry } = useTodayEntry();
-  const { children, loading: childrenLoading } = useChildren();
+  const {
+    has_subscription,
+    status,
+    is_trial,
+    trial_expires_at,
+    loading: subLoading,
+    error,
+  } = useSubscription();
+  const { todayEntry, isLoading: todayEntryLoading } = useTodayEntry();
+  const { children } = useChildren();
   const router = useRouter();
 
- 
-  // サブスク未登録の場合のチェック
-  const needsSubscription = !has_subscription || status === 'incomplete';
-
-  // childrenのニックネームがあるかどうかで判定
-  const needsSetup = !needsSubscription && children.length === 0;
-
-  useEffect(() => {
-    // ローディング中は処理をスキップ
-    if (subLoading || childrenLoading) {
-      console.log('ローディング中: 処理をスキップ');
-      return;
-    }
-    
-    console.log('=== useEffect デバッグ ===');
-    console.log('needsSubscription:', needsSubscription);
-    console.log('needsSetup:', needsSetup);
-    console.log('has_subscription:', has_subscription);
-    console.log('status:', status);
-    console.log('children count:', children.length);
-    console.log('========================');
-    
-    if (needsSubscription) {
-      console.log('リダイレクト: /subscription');
-      router.push('/subscription');
-    } else if (needsSetup) {
-      console.log('リダイレクト: /app/setup');
-      router.push('/app/setup');
-    }
-  }, [needsSubscription, needsSetup, router, has_subscription, status, subLoading, childrenLoading, children.length]); // childrenLoadingとchildren.lengthも追加
-
+  // セットアップチェックはmiddlewareで実行されるため、ここでは不要
 
   // おしゃべりボタンが押された時の処理
   const handleStartEmotion = () => {
@@ -71,45 +38,12 @@ export default function AppHomePage() {
     router.push('/app/entries/today');
   };
 
-  // ログイン処理
-  const handleLogin = async () => {
-    try {
-      await login();
-    } catch (error) {
-      console.error('ログインエラー:', error);
-    }
-  };
-
-  // ログアウト処理
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
-
   // ローディング中
-  if (isLoading || subLoading || childrenLoading) {
+  if (todayEntryLoading) {
     return (
       <div style={commonStyles.loading.container}>
         <Spinner size="medium" />
         <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合
-  if (!user) {
-    return (
-      <div style={commonStyles.login.container}>
-        <div style={commonStyles.login.card}>
-          <h1>ようこそ！</h1>
-          <p>続けるにはログインしてください。</p>
-          <button
-            style={commonStyles.login.button}
-            onClick={handleLogin}
-          >
-            Googleでログイン
-          </button>
-        </div>
       </div>
     );
   }
@@ -120,16 +54,6 @@ export default function AppHomePage() {
   const getSpeechBubbleText = () => {
     return `${children[0]?.nickname || ''}、\n\nきょうも いっしょに きもちを \n\nたんけんしよう！`;
   };
-
-  // デバッグ情報を表示（一時的に）
-  console.log('=== デバッグ情報 ===');
-  console.log('has_subscription:', has_subscription);
-  console.log('status:', status);
-  console.log('trial:', is_trial);
-  console.log('trial_expires_at:', trial_expires_at);
-  console.log('loading:', subLoading);
-  console.log('error:', error);
-  console.log('========================');
 
   return (
     <div style={commonStyles.page.container}>

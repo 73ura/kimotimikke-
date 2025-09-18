@@ -3,7 +3,6 @@
 import { ErrorDisplay } from '@/components/emotion/ErrorDisplay';
 import { IntensityButton } from '@/components/emotion/IntensityButton';
 import { AudioPlayer, KokoronDefault, Spinner } from '@/components/ui';
-import { useAuth } from '@/contexts/AuthContext';
 import { useEmotionIntensity } from '@/hooks/useEmotionIntensity';
 import { commonStyles } from '@/styles/theme';
 import { EmotionIntensity } from '@/types/emotion';
@@ -11,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
 function EmotionIntensityContent() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   // カスタムフックを使用
@@ -33,22 +31,6 @@ function EmotionIntensityContent() {
   const handleBack = () => {
     router.push('/app/emotion-selection');
   };
-
-  // ローディング中（認証）
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <Spinner size="medium" />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合
-  if (!user) {
-    router.push('/');
-    return null;
-  }
 
   // 感情データ読み込み中
   if (isLoadingEmotion) {

@@ -1,53 +1,62 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import {
+  borderRadius,
   colors,
   commonStyles,
-  spacing,
   fontSize,
-  borderRadius,
+  spacing,
 } from '@/styles/theme';
+import { log, error as logError } from '@/utils/logger';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
-  const { isLoading, login, logout } = useAuth();
+  const { isLoading, error, login, logout, clearError } = useAuth();
   const router = useRouter();
   const [isLoginLoading, setIsLoginLoading] = useState(false);
 
   // ログインしていない場合の通常のレンダリング
   const handleLogin = async () => {
-    console.log('=== Login Process Start ===');
-    console.log('1. handleLogin called');
-    
-    setIsLoginLoading(true);
-    try {
-      console.log('2. Calling login() function');
-      await login();
-      console.log('3. login() completed successfully');
-      
-      console.log('4. Redirecting to /subscription');
-      router.push('/subscription');
-      console.log('5. router.push completed');
-    } catch (error) {
-      console.error('ログインエラー:', error);
-      alert('ログインに失敗しました。もう一度お試しください。');
-    } finally {
-      setIsLoginLoading(false);
-      console.log('6. Login process finished');
+    if (process.env.NODE_ENV === 'development') {
+      log('=== Login Process Start ===');
+      log('1. handleLogin called');
     }
+
+    setIsLoginLoading(true);
+    clearError(); // エラーをクリア
+
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        log('2. Calling login() function');
+      }
+      await login();
+      if (process.env.NODE_ENV === 'development') {
+        log('3. login() completed successfully');
+      }
+    } catch (loginError) {
+      logError('ログインエラー:', loginError);
+      setIsLoginLoading(false);
+      // AuthContextでエラーが設定されるため、ここでは追加の処理は不要
+    }
+
+    // リダイレクトが発生しない場合のみ実行される
+    if (process.env.NODE_ENV === 'development') {
+      log('6. Login process finished (no redirect occurred)');
+    }
+    setIsLoginLoading(false);
   };
 
   const handleBackToHome = async () => {
     try {
       await logout();
-      console.log('ログアウト完了');
+      log('ログアウト完了');
       router.push('/');
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
-      alert('ログアウトに失敗しました');
+    } catch (logoutError) {
+      logError('ログアウトエラー:', logoutError);
+      // AuthContextでエラーが設定されるため、ここでは追加の処理は不要
     }
   };
 
@@ -61,14 +70,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      ...commonStyles.page.container,
-      backgroundImage: 'url(/images/background.webp)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      minHeight: '100vh',
-    }}>
+    <div
+      style={{
+        ...commonStyles.page.container,
+        backgroundImage: 'url(/images/background.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh',
+      }}
+    >
       <div style={commonStyles.page.mainContent}>
         {/* 戻るボタン */}
         <button
@@ -86,7 +97,6 @@ export default function LoginPage() {
         >
           ← 戻る
         </button>
-
 
         {/* ログインカード */}
         <div
@@ -125,6 +135,61 @@ export default function LoginPage() {
             <br />
             Googleアカウントでログインが必要です。
           </p>
+
+          {/* エラー表示 */}
+          {error && (
+            <div
+              style={{
+                backgroundColor: '#fee',
+                border: '1px solid #fcc',
+                borderRadius: borderRadius.small,
+                padding: spacing.md,
+                marginBottom: spacing.md,
+                color: '#c33',
+                fontSize: fontSize.base,
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ margin: 0, marginBottom: spacing.sm }}>
+                {error.userFriendlyMessage}
+              </p>
+              {/* 開発環境でのみ技術的詳細を表示 */}
+              {process.env.NODE_ENV !== 'production' && (
+                <details
+                  style={{ marginTop: spacing.sm, fontSize: fontSize.small }}
+                >
+                  <summary style={{ cursor: 'pointer', color: '#666' }}>
+                    技術的詳細（開発環境のみ）
+                  </summary>
+                  <div style={{ marginTop: spacing.xs, textAlign: 'left' }}>
+                    <p>
+                      <strong>エラーコード:</strong> {error.code}
+                    </p>
+                    <p>
+                      <strong>技術的メッセージ:</strong> {error.message}
+                    </p>
+                    <p>
+                      <strong>再試行可能:</strong>{' '}
+                      {error.retryable ? 'はい' : 'いいえ'}
+                    </p>
+                  </div>
+                </details>
+              )}
+              <button
+                onClick={clearError}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#c33',
+                  fontSize: fontSize.small,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                エラーを閉じる
+              </button>
+            </div>
+          )}
 
           <button
             onClick={handleLogin}
@@ -166,7 +231,8 @@ export default function LoginPage() {
             }}
           >
             <p style={{ margin: 0 }}>
-              ✅ ログイン後、決済情報の入力をいただいた後に7日間の無料体験をご利用いただけるようになります。
+              ✅
+              ログイン後、決済情報の入力をいただいた後に7日間の無料体験をご利用いただけるようになります。
             </p>
           </div>
         </div>

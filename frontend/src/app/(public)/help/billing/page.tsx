@@ -1,14 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { BillingInfoContent } from '@/components/ui';
-import {
-  colors,
-  commonStyles,
-  spacing,
-  fontSize,
-  borderRadius,
-} from '@/styles/theme';
+import { borderRadius, colors, fontSize, spacing } from '@/styles/theme';
+import { useRouter } from 'next/navigation';
 
 export default function BillingHelpPage() {
   const router = useRouter();
@@ -18,26 +12,30 @@ export default function BillingHelpPage() {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'url("/images/background.webp") no-repeat center center',
-      backgroundSize: 'cover',
-      backgroundAttachment: 'fixed',
-      overflow: 'auto',
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        minHeight: '100vh',
-        padding: `${spacing.xl} ${spacing.lg}`,
-        paddingTop: '100px',
-      }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'url("/images/background.webp") no-repeat center center',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        overflow: 'auto',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100vh',
+          padding: `${spacing.xl} ${spacing.lg}`,
+          paddingTop: '100px',
+        }}
+      >
         {/* 戻るボタン */}
         <button
           onClick={handleBack}
@@ -106,12 +104,14 @@ export default function BillingHelpPage() {
           </div>
 
           {/* サブスクリプション登録ボタン */}
-          <div style={{
-            textAlign: 'center',
-            marginTop: spacing.lg,
-          }}>
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: spacing.lg,
+            }}
+          >
             <button
-              onClick={() => router.push('/subscription')}
+              onClick={() => router.push('/pricing')}
               style={{
                 backgroundColor: colors.primary,
                 color: colors.background.white,
@@ -124,7 +124,8 @@ export default function BillingHelpPage() {
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primaryHover || '#ff5252';
+                e.currentTarget.style.backgroundColor =
+                  colors.primaryHover || '#ff5252';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = colors.primary;

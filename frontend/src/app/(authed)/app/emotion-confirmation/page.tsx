@@ -3,14 +3,12 @@
 import { EmotionCard } from '@/components/emotion/EmotionCard';
 import { AudioPlayer, KokoronDefault, Spinner } from '@/components/ui';
 import { ANIMATION_DURATION } from '@/constants/emotion';
-import { useAuth } from '@/contexts/AuthContext';
 import { useEmotionConfirmation } from '@/hooks/useEmotionConfirmation';
 import { commonStyles } from '@/styles/theme';
 import { useRouter } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
 function EmotionConfirmationContent() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [showGuide, setShowGuide] = useState(true);
 
@@ -70,22 +68,6 @@ function EmotionConfirmationContent() {
       router.push('/app/emotion-selection');
     }
   };
-
-  // ローディング中（認証）
-  if (isLoading) {
-    return (
-      <div style={commonStyles.loading.container}>
-        <Spinner size="medium" />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
-  // ログインしていない場合
-  if (!user) {
-    router.push('/');
-    return null;
-  }
 
   // データ読み込み中
   if (isLoadingData) {

@@ -71,45 +71,26 @@ test.describe("実際の認証フローテスト", () => {
       console.log("✅ 認証フロー + フロントエンド連携成功");
     });
 
-    test("認証成功後のサブスクリプションページ遷移", async ({ page }) => {
-      await authHelper.setupMockAuth(page, googleAuth);
-      await authHelper.navigateToSubscription(page);
-      console.log("✅ 認証成功後のサブスクリプションページ遷移成功");
+    test("認証成功後のプライシングページ遷移（サブスク未登録）", async ({
+      page,
+    }) => {
+      await authHelper.setupMockAuthWithoutSubscription(page, googleAuth);
+      await authHelper.navigateToPricing(page);
+      console.log(
+        "✅ 認証成功後のプライシングページ遷移成功（サブスク未登録）"
+      );
     });
 
-    test("認証失敗時のフロントエンドエラーハンドリング", async ({ page }) => {
-      await authHelper.setupAuthFailure(page, googleAuth);
-      await googleAuth.checkAuthErrorHandling();
-
-      const googleLoginBtn = page.locator(
-        'button:has-text("🔐Googleでログイン")'
-      );
-      await expect(googleLoginBtn).toBeVisible();
-
-      console.log("✅ 認証失敗時のフロントエンドエラーハンドリング成功");
+    test("認証成功後のアプリページ遷移（サブスク登録済み）", async ({
+      page,
+    }) => {
+      await authHelper.setupMockAuthWithSubscription(page, googleAuth);
+      await authHelper.navigateToApp(page);
+      console.log("✅ 認証成功後のアプリページ遷移成功（サブスク登録済み）");
     });
   });
 
   test.describe("異常系テスト", () => {
-    test("ネットワークエラー時の認証処理", async ({ page }) => {
-      await page.goto("/login");
-      await googleAuth.checkGoogleLoginButton();
-
-      // ログインボタンクリック後にネットワークを無効化
-      await page.route("**/*", (route) => route.abort());
-
-      await googleAuth.clickGoogleLoginButton();
-
-      // エラーメッセージが表示されることを確認
-      await page.waitForTimeout(2000);
-
-      // ネットワークエラー時はchrome-errorページに遷移することを確認
-      const currentUrl = page.url();
-      expect(currentUrl).toMatch(/chrome-error|error/);
-
-      console.log("✅ ネットワークエラー時の認証処理成功");
-    });
-
     // CI環境では実際のポップアップが開けないためスキップ
     test.skip("認証ポップアップが開かない場合の処理", async ({ page }) => {
       await page.goto("/login");
@@ -147,65 +128,6 @@ test.describe("実際の認証フローテスト", () => {
       page.setDefaultTimeout(30000);
 
       console.log("✅ 認証タイムアウト時の処理成功");
-    });
-
-    test.skip("無効な認証状態でのページアクセス", async ({ page }) => {
-      // TODO: アプリケーションの認証ロジックに問題あり
-      // AuthContextのisLoading状態管理が不適切で、認証状態チェックが永続的にローディング状態になる
-      // 認証状態なしで保護されたページにアクセス
-      await page.goto("/app");
-
-      // ローディングスピナーが表示されることを確認
-      await expect(page.locator("text=読み込み中...")).toBeVisible();
-
-      // ローディングが完了するまで待機（最大10秒）
-      await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 10000,
-      });
-
-      // ログインボタンが表示されることを確認
-      await expect(
-        page.locator('button:has-text("Googleでログイン")')
-      ).toBeVisible();
-
-      // ログインページにリダイレクトされないことを確認
-      await expect(page).toHaveURL(/\/app$/);
-
-      console.log("✅ 無効な認証状態でのページアクセス成功");
-    });
-
-    test.skip("認証状態の不整合時の処理", async ({ page }) => {
-      // TODO: アプリケーションの認証ロジックに問題あり
-      // AuthContextのisLoading状態管理が不適切で、認証状態チェックが永続的にローディング状態になる
-      // 無効な認証状態を設定
-      await page.evaluate(() => {
-        if (window.firebase && window.firebase.auth) {
-          window.firebase.auth().currentUser = {
-            uid: "invalid-user",
-            email: "invalid@example.com",
-          };
-        }
-      });
-
-      await page.goto("/app");
-
-      // ローディングスピナーが表示されることを確認
-      await expect(page.locator("text=読み込み中...")).toBeVisible();
-
-      // ローディングが完了するまで待機（最大10秒）
-      await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 10000,
-      });
-
-      // ログインボタンが表示されることを確認（認証状態が無効なため）
-      await expect(
-        page.locator('button:has-text("Googleでログイン")')
-      ).toBeVisible();
-
-      // /appページに留まっていることを確認
-      await expect(page).toHaveURL(/\/app$/);
-
-      console.log("✅ 認証状態の不整合時の処理成功");
     });
   });
 

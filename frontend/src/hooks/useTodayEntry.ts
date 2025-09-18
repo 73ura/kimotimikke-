@@ -13,6 +13,16 @@ interface TodayEntry {
   createdAt: string;
 }
 
+interface VoiceRecord {
+  id: string;
+  created_at: string;
+  emotion_card?: {
+    label: string;
+  };
+  intensity_id?: number;
+  voice_note?: string;
+}
+
 export function useTodayEntry() {
   const { user } = useAuth();
   const [todayEntry, setTodayEntry] = useState<TodayEntry | null>(null);
@@ -56,7 +66,7 @@ export function useTodayEntry() {
 
           // すべてのレコードのcreated_atを確認
           console.log('[DEBUG] 全レコードのcreated_at一覧:');
-          data.records?.forEach((record: any, index: number) => {
+          data.records?.forEach((record: VoiceRecord, index: number) => {
             if (Array.isArray(record.created_at)) {
               // 配列形式の場合は中身も詳細表示
               const [dateStr, timeStr] = record.created_at;
@@ -90,10 +100,12 @@ export function useTodayEntry() {
                 isArray: Array.isArray(record.created_at),
               });
             }
+
+            return false;
           });
 
           // 今日の記録を探す
-          const todayRecord = data.records.find((record: any) => {
+          const todayRecord = data.records.find((record: VoiceRecord) => {
             try {
               // 日付の妥当性チェック
               if (!record.created_at) {
@@ -237,17 +249,8 @@ export function useTodayEntry() {
               transcript: todayRecord.voice_note || '',
               createdAt: todayRecord.created_at,
             });
-            console.log('[useTodayEntry] 今日の記録を設定:', {
-              id: todayRecord.id,
-              date: today,
-              emotion: todayRecord.emotion_card?.label || '不明',
-              intensity: todayRecord.intensity_id || 1,
-              transcript: todayRecord.voice_note || '',
-              createdAt: todayRecord.created_at,
-            });
           } else {
             setTodayEntry(null);
-            console.log('[useTodayEntry] 今日の記録なし、日付比較が失敗');
           }
         } else {
           console.error(
@@ -257,12 +260,10 @@ export function useTodayEntry() {
           );
           setTodayEntry(null);
         }
-      } catch (error) {
-        console.error('[useTodayEntry] 今日の記録取得エラー:', error);
+      } catch {
         setTodayEntry(null);
       } finally {
         setIsLoading(false);
-        console.log('[useTodayEntry] 読み込み完了');
       }
     };
 

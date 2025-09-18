@@ -4,7 +4,7 @@ import { HamburgerMenu, PrimaryButton, Spinner } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   borderRadius,
@@ -15,8 +15,8 @@ import {
 } from '@/styles/theme';
 
 export default function SubscriptionManagePage() {
-  const { user, firebaseUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { firebaseUser } = useAuth();
   const {
     has_subscription,
     status,
@@ -34,16 +34,8 @@ export default function SubscriptionManagePage() {
     router.push('/app');
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
-
   // サブスクリプション解約処理
   const handleCancelSubscription = async () => {
-    if (!firebaseUser) return;
-
     const confirmCancel = window.confirm(
       'サブスクリプションを解約しますか？\n解約後も現在の請求期間の終了まではサービスをご利用いただけます。',
     );
@@ -52,6 +44,9 @@ export default function SubscriptionManagePage() {
 
     setIsCanceling(true);
     try {
+      if (!firebaseUser) {
+        throw new Error('ユーザー情報が取得できません');
+      }
       const idToken = await firebaseUser.getIdToken();
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       if (!apiBaseUrl) {
@@ -87,7 +82,7 @@ export default function SubscriptionManagePage() {
 
   // サブスクリプション再開処理
   const handleReactivateSubscription = () => {
-    router.push('/subscription');
+    router.push('/app/pricing');
   };
 
   // 日付フォーマット関数
@@ -112,18 +107,13 @@ export default function SubscriptionManagePage() {
   };
 
   // ローディング中
-  if (authLoading || subLoading) {
+  if (subLoading) {
     return (
       <div style={commonStyles.loading.container}>
         <Spinner size="medium" />
         <p>読み込み中...</p>
       </div>
     );
-  }
-
-  // 未認証の場合
-  if (!user) {
-    return null;
   }
 
   const getStatusDisplay = () => {

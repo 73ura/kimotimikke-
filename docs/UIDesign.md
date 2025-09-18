@@ -43,7 +43,7 @@ https://www.tldraw.com/f/YGLYadn0oAHt69EsUvl-o?d=v-1478.-1402.6836.3423.BiPFsJDc
 
 **実装ファイル**: `frontend/src/app/(public)/page.tsx`
 
-### 3. サブスクリプション画面 (`/subscription`)
+### 3. サブスクリプション画面 (`/pricing`)
 
 **目的**
 Stripe 決済によるサブスクリプション登録を提供する。
@@ -54,7 +54,7 @@ Stripe 決済によるサブスクリプション登録を提供する。
 - トライアル期間の説明
 - 決済完了後のリダイレクト処理
 
-**実装ファイル**: `frontend/src/app/(public)/subscription/page.tsx`
+**実装ファイル**: `frontend/src/app/(authed)/pricing/page.tsx`
 
 ### 4. アプリ内トップページ (`/app`)
 
@@ -70,7 +70,7 @@ Stripe 決済によるサブスクリプション登録を提供する。
 
 **画面遷移ロジック**
 
-- サブスクリプション未登録 → `/subscription`へリダイレクト
+- サブスクリプション未登録 → `/app/pricing`へリダイレクト
 - 子ども設定未完了 → `/app/setup`へリダイレクト
 - 正常 → トップページ表示
 

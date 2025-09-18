@@ -1,33 +1,30 @@
 // ペイウォール
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { KokoronDefault, PrimaryButton, Spinner } from '@/components/ui';
 import { FeatureList } from '@/components/ui/FeatureList';
-import {
-  colors,
-  commonStyles,
-  spacing,
-  fontSize,
-  borderRadius,
-} from '@/styles/theme';
+import { useAuth } from '@/contexts/AuthContext';
 import { createCheckoutSession, redirectToStripeCheckout } from '@/lib/api';
+import { colors, commonStyles, fontSize, spacing } from '@/styles/theme';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function SubscriptionPage() {
+export default function PricingPage() {
   const { firebaseUser, logout } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   // デバッグ用: 認証状態を確認
-  console.log('=== SubscriptionPage Debug ===');
+  console.log('=== PricingPage Debug ===');
   console.log('firebaseUser:', firebaseUser);
-  console.log('Current URL:', typeof window !== 'undefined' ? window.location.href : 'Server side');
-  
+  console.log(
+    'Current URL:',
+    typeof window !== 'undefined' ? window.location.href : 'Server side',
+  );
+
   const logDebugInfo = async () => {
-    console.log('SubscriptionPage render:', { firebaseUser: !!firebaseUser });
-    
+    console.log('PricingPage render:', { firebaseUser: !!firebaseUser });
+
     if (firebaseUser) {
       try {
         const idToken = await firebaseUser.getIdToken(true); // 強制更新
@@ -43,9 +40,9 @@ export default function SubscriptionPage() {
   };
 
   // コンポーネントがマウントされた時にデバッグ情報を出力
-  useState(() => {
+  useEffect(() => {
     logDebugInfo();
-  });
+  }, [firebaseUser]);
 
   const handleStartSubscription = async () => {
     if (!firebaseUser) {
@@ -61,28 +58,43 @@ export default function SubscriptionPage() {
       let idToken: string;
       let retryCount = 0;
       const maxRetries = 3;
-      
+
       while (retryCount < maxRetries) {
         try {
-          console.log(`Attempting to get ID token (attempt ${retryCount + 1}/${maxRetries})`);
+          console.log(
+            `Attempting to get ID token (attempt ${retryCount + 1}/${maxRetries})`,
+          );
           idToken = await firebaseUser.getIdToken(true);
           console.log('ID token obtained successfully');
           break;
         } catch (tokenError: unknown) {
-          console.error(`ID token error (attempt ${retryCount + 1}):`, tokenError);
+          console.error(
+            `ID token error (attempt ${retryCount + 1}):`,
+            tokenError,
+          );
           retryCount++;
-          
+
           if (retryCount >= maxRetries) {
-            const errorMessage = tokenError instanceof Error ? tokenError.message : 'Unknown error';
-            throw new Error(`Firebase認証トークンの取得に失敗しました。しばらく時間をおいて再度お試しください。\n詳細: ${errorMessage}`);
+            const errorMessage =
+              tokenError instanceof Error
+                ? tokenError.message
+                : 'Unknown error';
+            throw new Error(
+              `Firebase認証トークンの取得に失敗しました。しばらく時間をおいて再度お試しください。\n詳細: ${errorMessage}`,
+            );
           }
-          
+
           // 少し待ってからリトライ
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * retryCount),
+          );
         }
       }
-      
-      console.log('Starting subscription with token:', idToken!.substring(0, 50) + '...');
+
+      console.log(
+        'Starting subscription with token:',
+        idToken!.substring(0, 50) + '...',
+      );
 
       // 2) Checkout Session 作成
       const sessionId = await createCheckoutSession(idToken!);
@@ -97,20 +109,23 @@ export default function SubscriptionPage() {
     }
   };
 
-  const handleBackToPublicTop = async () => {
-    console.log('戻るボタンがクリックされました'); 
-          console.log('現在のパス:', typeof window !== 'undefined' ? window.location.pathname : 'Server side'); 
-    
+  const handleBackToLogin = async () => {
+    console.log('戻るボタンがクリックされました');
+    console.log(
+      '現在のパス:',
+      typeof window !== 'undefined' ? window.location.pathname : 'Server side',
+    );
+
     try {
       // ログアウト処理を実行
       await logout();
       console.log('ログアウト完了');
-      
-      // トップページにリダイレクト
-      router.push('/');
+
+      // ログインページにリダイレクト
+      router.push('/login');
     } catch (error) {
       console.error('ログアウトエラー:', error);
-      router.push('/');
+      router.push('/login');
     }
   };
 
@@ -132,7 +147,7 @@ export default function SubscriptionPage() {
       <div style={commonStyles.page.mainContent}>
         {/* 戻るボタン */}
         <button
-          onClick={handleBackToPublicTop} 
+          onClick={handleBackToLogin}
           style={{
             position: 'absolute',
             top: '12px',
@@ -165,8 +180,6 @@ export default function SubscriptionPage() {
             border: `3px solid ${colors.primary}`,
           }}
         >
-
-
           <h1
             style={{
               color: colors.text.primary,
@@ -175,7 +188,8 @@ export default function SubscriptionPage() {
               marginBottom: spacing.sm,
             }}
           >
-            <span style={{ color: colors.primary }}>STEP2</span> サブスクリプション登録
+            <span style={{ color: colors.primary }}>STEP2</span>{' '}
+            サブスクリプション登録
           </h1>
 
           <div
@@ -208,7 +222,7 @@ export default function SubscriptionPage() {
             8日目から有料プランへ移行します。
           </p>
 
-        {/* 機能一覧 */}
+          {/* 機能一覧 */}
           <FeatureList />
 
           <PrimaryButton onClick={handleStartSubscription} disabled={isLoading}>

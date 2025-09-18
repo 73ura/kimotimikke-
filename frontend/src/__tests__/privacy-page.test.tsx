@@ -1,9 +1,9 @@
 /// <reference types="vitest/globals" />
-import PrivacyPage from '../app/(authed)/app/privacy/page';
 import { useAuth } from '@/contexts/AuthContext';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { vi } from 'vitest';
+import PrivacyPage from '../app/(authed)/app/privacy/page';
 
 // モック
 vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
@@ -52,11 +52,13 @@ describe('PrivacyPage', () => {
 
   it('ローディング状態を表示する', () => {
     setup({ user: null, isLoading: true });
-    expect(screen.getByText('Loading')).toBeInTheDocument();
+    // middlewareで認証処理を行うため、ローディング表示は不要
+    expect(screen.getByText('プライバシーポリシー')).toBeInTheDocument();
   });
 
-  it('未ログイン時にリダイレクトする', () => {
+  it('middlewareで認証処理されるためリダイレクトテストは不要', () => {
+    // middleware導入により、各ページでの認証チェックとリダイレクトは不要
     setup({ user: null, isLoading: false });
-    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });
