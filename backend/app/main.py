@@ -66,9 +66,15 @@ register_error_handlers(app)
 
 # CORSミドルウェア設定
 origins = [
-    "http://localhost:3000",
-    # 本番用ドメインは後で追加予定
+    "http://localhost:3000",  # 開発環境
+    "https://localhost:3000",  # 開発環境（HTTPS）
+    # 本番用ドメイン（環境変数から取得）
 ]
+
+# 環境変数から本番ドメインを追加
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
