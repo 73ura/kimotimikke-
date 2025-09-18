@@ -1,6 +1,7 @@
 'use client';
 
 import { AudioPlayer } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { borderRadius, colors, spacing } from '@/styles/theme';
 import {
   getAudioConstraints,
@@ -42,6 +43,7 @@ export default function VoiceEntryPage() {
 // 既存のコンポーネントをVoicePageContentにリネーム
 function VoicePageContent() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const searchParams = useSearchParams();
   const emotionId = searchParams.get('emotion');
@@ -389,6 +391,10 @@ function VoicePageContent() {
         return;
       }
       try {
+        if (!user) {
+          setCheckingToday(false);
+          return;
+        }
         const res = await fetch(`${API_BASE}/api/v1/voice/records/${user.id}`);
         if (!res.ok) throw new Error(`records 取得失敗: ${res.status}`);
         const data = await res.json();
@@ -426,6 +432,10 @@ function VoicePageContent() {
   // 録音開始
   const startRecording = async () => {
     try {
+      if (!user) {
+        setError('ユーザー情報が取得できません');
+        return;
+      }
       setError(null);
       setStatus('');
       setAudioBlob(null);
@@ -540,7 +550,7 @@ function VoicePageContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: user.id,
+          user_id: user!.id,
           file_type: 'audio',
           file_format: recConfig.ext,
         }),
@@ -571,7 +581,7 @@ function VoicePageContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: user.id,
+          user_id: user!.id,
           audio_file_path: upData.file_path,
           language: 'ja',
         }),
@@ -600,7 +610,7 @@ function VoicePageContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: user.id,
+          user_id: user!.id,
           audio_file_path: audioPath,
           text_file_path: textPath,
           voice_note: trData.text || '',
