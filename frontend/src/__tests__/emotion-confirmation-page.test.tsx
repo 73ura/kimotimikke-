@@ -67,12 +67,14 @@ describe('EmotionConfirmationPage', () => {
 
   it('ローディング状態を表示する', () => {
     setup({ user: null, isLoading: true });
-    expect(screen.getByText('Loading')).toBeInTheDocument();
+    // middlewareで認証処理を行うため、ローディング表示は不要
+    expect(screen.getByText('こんなきもちなんだね？')).toBeInTheDocument();
   });
 
-  it('未ログイン時にリダイレクトする', () => {
+  it('middlewareで認証処理されるためリダイレクトテストは不要', () => {
+    // middleware導入により、各ページでの認証チェックとリダイレクトは不要
     setup({ user: null, isLoading: false });
-    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('エラー状態を表示する', () => {
