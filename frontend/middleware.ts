@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 認証が必要なパス（(authed)グループ）
-  const protectedPaths = ['/app', '/pricing'];
+  const protectedPaths = ['/app', '/billing', '/pricing', 'not-found.tsx'];
 
   // 認証が不要なパス（(public)グループ）
   const publicPaths = ['/help', '/login'];
