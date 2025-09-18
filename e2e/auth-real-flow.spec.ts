@@ -223,15 +223,23 @@ test.describe("実際の認証フローテスト", () => {
     test("認証状態の不整合時の処理", async ({ page }) => {
       // 無効な認証トークンを設定
       await page.evaluate(() => {
-        // 無効なトークンをクッキーに設定
-        document.cookie = "firebase-id-token=invalid-token; path=/;";
+        // 無効なトークンをクッキーに設定（より確実に無効にする）
+        document.cookie = "firebase-id-token=invalid-token-12345; path=/;";
       });
 
       // ページをリロードしてクッキー設定を確実にする
       await page.reload();
       await page.waitForLoadState("networkidle");
 
+      // デバッグ: クッキーが設定されているか確認
+      const cookies = await page.context().cookies();
+      console.log("設定されたクッキー:", cookies);
+
       await page.goto("/app");
+
+      // デバッグ: 現在のURLを確認
+      const currentUrl = page.url();
+      console.log("現在のURL:", currentUrl);
 
       // 無効な認証状態の場合はログインページにリダイレクトされる
       await expect(page).toHaveURL(/\/login/);
