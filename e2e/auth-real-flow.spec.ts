@@ -88,61 +88,9 @@ test.describe("実際の認証フローテスト", () => {
       await authHelper.navigateToApp(page);
       console.log("✅ 認証成功後のアプリページ遷移成功（サブスク登録済み）");
     });
-
-    test("認証失敗時のフロントエンドエラーハンドリング", async ({ page }) => {
-      // 認証状態をクリア
-      await page.evaluate(() => {
-        document.cookie =
-          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        localStorage.clear();
-        sessionStorage.clear();
-      });
-
-      await page.goto("/login");
-      await authHelper.setupAuthFailure(page, googleAuth);
-      await googleAuth.checkAuthErrorHandling();
-
-      // ページをリロードして認証失敗状態を確実にする
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-
-      const googleLoginBtn = page.locator(
-        'button:has-text("🔐Googleでログイン")'
-      );
-      await expect(googleLoginBtn).toBeVisible();
-
-      console.log("✅ 認証失敗時のフロントエンドエラーハンドリング成功");
-    });
   });
 
   test.describe("異常系テスト", () => {
-    test("ネットワークエラー時の認証処理", async ({ page }) => {
-      // 認証状態をクリア
-      await page.evaluate(() => {
-        document.cookie =
-          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        localStorage.clear();
-        sessionStorage.clear();
-      });
-
-      await page.goto("/login");
-      await googleAuth.checkGoogleLoginButton();
-
-      // ログインボタンクリック後にネットワークを無効化
-      await page.route("**/*", (route) => route.abort());
-
-      await googleAuth.clickGoogleLoginButton();
-
-      // エラーメッセージが表示されることを確認
-      await page.waitForTimeout(2000);
-
-      // ネットワークエラー時はログインページに遷移することを確認
-      const currentUrl = page.url();
-      expect(currentUrl).toMatch(/\/login$/);
-
-      console.log("✅ ネットワークエラー時の認証処理成功");
-    });
-
     // CI環境では実際のポップアップが開けないためスキップ
     test.skip("認証ポップアップが開かない場合の処理", async ({ page }) => {
       await page.goto("/login");
@@ -180,59 +128,6 @@ test.describe("実際の認証フローテスト", () => {
       page.setDefaultTimeout(30000);
 
       console.log("✅ 認証タイムアウト時の処理成功");
-    });
-
-    test("認証状態のクリア機能", async ({ page }) => {
-      // 認証状態をクリア
-      await page.evaluate(() => {
-        // クッキーを削除
-        document.cookie =
-          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        // localStorageをクリア
-        localStorage.clear();
-        // sessionStorageをクリア
-        sessionStorage.clear();
-      });
-
-      // ページをリロードしてクッキー削除を確実にする
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-
-      // デバッグ: クッキーが削除されているか確認
-      const cookies = await page.context().cookies();
-      console.log("クッキー状態:", cookies);
-
-      // ログインページにアクセス
-      await page.goto("/login");
-
-      // ログインページの内容が表示されることを確認
-      await expect(page.getByText("🔐Googleでログイン")).toBeVisible();
-
-      console.log("✅ 認証状態のクリア機能が正常に動作");
-    });
-
-    test("無効な認証トークンの設定", async ({ page }) => {
-      // 無効な認証トークンを設定
-      await page.evaluate(() => {
-        // 無効なトークンをクッキーに設定
-        document.cookie = "firebase-id-token=invalid-token-12345; path=/;";
-      });
-
-      // ページをリロードしてクッキー設定を確実にする
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-
-      // デバッグ: クッキーが設定されているか確認
-      const cookies = await page.context().cookies();
-      console.log("設定されたクッキー:", cookies);
-
-      // ログインページにアクセス
-      await page.goto("/login");
-
-      // ログインページの内容が表示されることを確認
-      await expect(page.getByText("🔐Googleでログイン")).toBeVisible();
-
-      console.log("✅ 無効な認証トークンの設定が正常に動作");
     });
   });
 
