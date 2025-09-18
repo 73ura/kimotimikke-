@@ -2,6 +2,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getChildren } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
+interface FirebaseError {
+  code: string;
+  message: string;
+}
+
+function isFirebaseError(error: unknown): error is FirebaseError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as Record<string, unknown>).code === 'string'
+  );
+}
+
 export interface Child {
   id: string;
   nickname: string;
@@ -32,11 +46,11 @@ export const useChildren = () => {
         setError(null);
         const childrenData = await getChildren(firebaseUser);
         setChildren(childrenData);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to fetch children:', err);
 
         // Firebase quota exceeded の場合は特別処理
-        if (err?.code === 'auth/quota-exceeded') {
+        if (isFirebaseError(err) && err.code === 'auth/quota-exceeded') {
           console.warn('Firebase quota exceeded - 空の配列を返します');
           setChildren([]);
           setError(
