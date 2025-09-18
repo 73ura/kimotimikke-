@@ -71,13 +71,26 @@ test.describe("実際の認証フローテスト", () => {
       console.log("✅ 認証フロー + フロントエンド連携成功");
     });
 
-    test("認証成功後のプライシングページ遷移", async ({ page }) => {
-      await authHelper.setupMockAuth(page, googleAuth);
+    test("認証成功後のプライシングページ遷移（サブスク未登録）", async ({
+      page,
+    }) => {
+      await authHelper.setupMockAuthWithoutSubscription(page, googleAuth);
       await authHelper.navigateToPricing(page);
-      console.log("✅ 認証成功後のプライシングページ遷移成功");
+      console.log(
+        "✅ 認証成功後のプライシングページ遷移成功（サブスク未登録）"
+      );
+    });
+
+    test("認証成功後のアプリページ遷移（サブスク登録済み）", async ({
+      page,
+    }) => {
+      await authHelper.setupMockAuthWithSubscription(page, googleAuth);
+      await authHelper.navigateToApp(page);
+      console.log("✅ 認証成功後のアプリページ遷移成功（サブスク登録済み）");
     });
 
     test("認証失敗時のフロントエンドエラーハンドリング", async ({ page }) => {
+      await page.goto("/login");
       await authHelper.setupAuthFailure(page, googleAuth);
       await googleAuth.checkAuthErrorHandling();
 
@@ -164,47 +177,34 @@ test.describe("実際の認証フローテスト", () => {
       // 認証状態なしで保護されたページにアクセス
       await page.goto("/app");
 
-      // 注意: テスト環境では認証済みユーザーとして動作するため、/pricingにリダイレクトされる
-      await expect(page).toHaveURL(/\/pricing$/);
+      // 認証されていない場合はログインページにリダイレクトされる
+      await expect(page).toHaveURL(/\/login/);
 
-      // プライシングページの内容が表示されることを確認
-      await expect(
-        page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
-      ).toBeVisible();
+      // ログインページの内容が表示されることを確認
+      await expect(page.getByText("🔐Googleでログイン")).toBeVisible();
 
       console.log(
-        "✅ 無効な認証状態でのページアクセスでプライシングページにリダイレクト成功"
+        "✅ 無効な認証状態でのページアクセスでログインページにリダイレクト成功"
       );
     });
 
     test("認証状態の不整合時の処理", async ({ page }) => {
-      // 無効な認証状態を設定
+      // 無効な認証トークンを設定
       await page.evaluate(() => {
-        if (window.firebase && window.firebase.auth) {
-          window.firebase.auth().currentUser = {
-            uid: "invalid-user",
-            email: "invalid@example.com",
-          };
-        }
+        // 無効なトークンをクッキーに設定
+        document.cookie = "firebase-id-token=invalid-token; path=/;";
       });
 
       await page.goto("/app");
 
-      // ローディングが完了するまで待機（最大5秒）
-      await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 5000,
-      });
+      // 無効な認証状態の場合はログインページにリダイレクトされる
+      await expect(page).toHaveURL(/\/login/);
 
-      // 認証済みだがサブスクリプション未登録の場合は/pricingにリダイレクトされる
-      await expect(page).toHaveURL(/\/pricing$/);
-
-      // プライシングページの内容が表示されることを確認
-      await expect(
-        page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
-      ).toBeVisible();
+      // ログインページの内容が表示されることを確認
+      await expect(page.getByText("🔐Googleでログイン")).toBeVisible();
 
       console.log(
-        "✅ 認証状態の不整合時の処理でプライシングページにリダイレクト成功"
+        "✅ 認証状態の不整合時の処理でログインページにリダイレクト成功"
       );
     });
   });

@@ -13,7 +13,6 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useTodayEntry } from '@/hooks/useTodayEntry';
 import { colors, commonStyles, fontSize, spacing } from '@/styles/theme';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function AppHomePage() {
   const {
@@ -25,56 +24,10 @@ export default function AppHomePage() {
     error,
   } = useSubscription();
   const { todayEntry, isLoading: todayEntryLoading } = useTodayEntry();
-  const { children, loading: childrenLoading } = useChildren();
+  const { children } = useChildren();
   const router = useRouter();
 
-  // サブスク未登録の場合のチェック（すべてのローディング完了後に判定）
-  const needsSubscription =
-    subLoading || childrenLoading || todayEntryLoading
-      ? false
-      : !has_subscription || status === 'incomplete';
-
-  // childrenのニックネームがあるかどうかで判定
-  // Firebase quota exceeded の場合はセットアップをスキップ
-  // ローディング中はセットアップ不要と判定
-  const needsSetup =
-    !needsSubscription && !childrenLoading && children.length === 0;
-
-  // デバッグ用（一時的）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('=== リダイレクト判定デバッグ ===');
-    console.log('has_subscription:', has_subscription);
-    console.log('status:', status);
-    console.log('needsSubscription:', needsSubscription);
-    console.log('children.length:', children.length);
-    console.log('needsSetup:', needsSetup);
-    console.log('subLoading:', subLoading);
-    console.log('childrenLoading:', childrenLoading);
-    console.log('todayEntryLoading:', todayEntryLoading);
-    console.log('==============================');
-  }
-
-  useEffect(() => {
-    // ローディング中はリダイレクトしない
-    if (subLoading || childrenLoading || todayEntryLoading) {
-      return;
-    }
-
-    if (needsSubscription) {
-      console.log('リダイレクト実行: /pricing (needsSubscription=true)');
-      router.push('/pricing');
-    } else if (needsSetup) {
-      console.log('リダイレクト実行: /app/setup (needsSetup=true)');
-      router.push('/app/setup');
-    }
-  }, [
-    needsSubscription,
-    needsSetup,
-    subLoading,
-    childrenLoading,
-    todayEntryLoading,
-    router,
-  ]);
+  // セットアップチェックはmiddlewareで実行されるため、ここでは不要
 
   // おしゃべりボタンが押された時の処理
   const handleStartEmotion = () => {
@@ -86,7 +39,7 @@ export default function AppHomePage() {
   };
 
   // ローディング中
-  if (subLoading || childrenLoading || todayEntryLoading) {
+  if (todayEntryLoading) {
     return (
       <div style={commonStyles.loading.container}>
         <Spinner size="medium" />

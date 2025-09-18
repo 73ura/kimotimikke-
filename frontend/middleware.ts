@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 保護されたパスへのアクセス
+  // 認証が必要なパスへのアクセス
   if (isProtectedPath) {
     if (process.env.NODE_ENV === 'development') {
       console.log(
@@ -77,13 +77,99 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
+
+    // 認証済みの場合、サブスクリプション状態をチェック
+    try {
+      const subscriptionResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/status`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+        },
+      );
+
+      if (subscriptionResponse.ok) {
+        const subscriptionData = await subscriptionResponse.json();
+        const hasSubscription =
+          subscriptionData.has_subscription || subscriptionData.is_trial;
+
+        if (!hasSubscription) {
+          // サブスクリプション未登録の場合はプライシングページにリダイレクト
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Redirecting to pricing page: no subscription');
+          }
+          return NextResponse.redirect(new URL('/pricing', request.url));
+        }
+
+        // サブスクリプション登録済みの場合、/appにアクセスした際はセットアップチェック
+        if (pathname === '/app') {
+          const childrenResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/children`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+              },
+            },
+          );
+
+          if (childrenResponse.ok) {
+            const childrenData = await childrenResponse.json();
+            if (childrenData.children && childrenData.children.length === 0) {
+              // 子ども情報が未設定の場合はセットアップページにリダイレクト
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Redirecting to setup page: no children data');
+              }
+              return NextResponse.redirect(new URL('/app/setup', request.url));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Subscription/Setup check failed:', error);
+    }
+
     return NextResponse.next();
   }
 
   // パブリックパスへのアクセス
   if (isPublicPath) {
     if (isAuthenticated) {
-      // 既に認証されている場合はアプリページにリダイレクト
+      // サブスクリプション状態をチェックしてリダイレクト先を決定
+      try {
+        const subscriptionResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/status`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+          },
+        );
+
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json();
+          const hasSubscription =
+            subscriptionData.has_subscription || subscriptionData.is_trial;
+
+          if (hasSubscription) {
+            // サブスクリプション登録済みの場合はアプリページにリダイレクト
+            return NextResponse.redirect(new URL('/app', request.url));
+          } else {
+            // サブスクリプション未登録の場合はプライシングページにリダイレクト
+            return NextResponse.redirect(new URL('/pricing', request.url));
+          }
+        }
+      } catch (error) {
+        console.error('Subscription check failed:', error);
+      }
+
+      // サブスクリプション状態の確認に失敗した場合はデフォルトでアプリページにリダイレクト
       return NextResponse.redirect(new URL('/app', request.url));
     }
 
@@ -94,7 +180,37 @@ export async function middleware(request: NextRequest) {
   // ルートパスへのアクセス
   if (isRootPath) {
     if (isAuthenticated) {
-      // 認証されている場合はアプリページにリダイレクト
+      // サブスクリプション状態をチェックしてリダイレクト先を決定
+      try {
+        const subscriptionResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/status`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+          },
+        );
+
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json();
+          const hasSubscription =
+            subscriptionData.has_subscription || subscriptionData.is_trial;
+
+          if (hasSubscription) {
+            // サブスクリプション登録済みの場合はアプリページにリダイレクト
+            return NextResponse.redirect(new URL('/app', request.url));
+          } else {
+            // サブスクリプション未登録の場合はプライシングページにリダイレクト
+            return NextResponse.redirect(new URL('/pricing', request.url));
+          }
+        }
+      } catch (error) {
+        console.error('Subscription check failed:', error);
+      }
+
+      // サブスクリプション状態の確認に失敗した場合はデフォルトでアプリページにリダイレクト
       return NextResponse.redirect(new URL('/app', request.url));
     }
 
