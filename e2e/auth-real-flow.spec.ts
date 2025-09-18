@@ -90,9 +90,21 @@ test.describe("実際の認証フローテスト", () => {
     });
 
     test("認証失敗時のフロントエンドエラーハンドリング", async ({ page }) => {
+      // 認証状態をクリア
+      await page.evaluate(() => {
+        document.cookie =
+          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+
       await page.goto("/login");
       await authHelper.setupAuthFailure(page, googleAuth);
       await googleAuth.checkAuthErrorHandling();
+
+      // ページをリロードして認証失敗状態を確実にする
+      await page.reload();
+      await page.waitForLoadState("networkidle");
 
       const googleLoginBtn = page.locator(
         'button:has-text("🔐Googleでログイン")'
@@ -105,6 +117,14 @@ test.describe("実際の認証フローテスト", () => {
 
   test.describe("異常系テスト", () => {
     test("ネットワークエラー時の認証処理", async ({ page }) => {
+      // 認証状態をクリア
+      await page.evaluate(() => {
+        document.cookie =
+          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+
       await page.goto("/login");
       await googleAuth.checkGoogleLoginButton();
 
@@ -174,8 +194,20 @@ test.describe("実際の認証フローテスト", () => {
         sessionStorage.clear();
       });
 
+      // ページをリロードしてクッキー削除を確実にする
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+
+      // デバッグ: クッキーが削除されているか確認
+      const cookies = await page.context().cookies();
+      console.log("クッキー状態:", cookies);
+
       // 認証状態なしで保護されたページにアクセス
       await page.goto("/app");
+
+      // デバッグ: 現在のURLを確認
+      const currentUrl = page.url();
+      console.log("現在のURL:", currentUrl);
 
       // 認証されていない場合はログインページにリダイレクトされる
       await expect(page).toHaveURL(/\/login/);
@@ -194,6 +226,10 @@ test.describe("実際の認証フローテスト", () => {
         // 無効なトークンをクッキーに設定
         document.cookie = "firebase-id-token=invalid-token; path=/;";
       });
+
+      // ページをリロードしてクッキー設定を確実にする
+      await page.reload();
+      await page.waitForLoadState("networkidle");
 
       await page.goto("/app");
 
