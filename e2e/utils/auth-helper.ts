@@ -14,12 +14,12 @@ export class AuthTestHelper {
   }
 
   /**
-   * サブスクリプションページに遷移
+   * プライシングページに遷移
    */
-  async navigateToSubscription(page: Page) {
-    await page.goto("/subscription");
+  async navigateToPricing(page: Page) {
+    await page.goto("/pricing");
     await page.waitForTimeout(1000);
-    await expect(page).toHaveURL(/\/subscription$/);
+    await expect(page).toHaveURL(/\/pricing$/);
   }
 
   /**
@@ -58,6 +58,6 @@ export class AuthTestHelper {
   async setupCompleteAuthFlow(page: Page, googleAuth: GoogleAuthHelper) {
     await page.goto("/login");
     await this.setupMockAuth(page, googleAuth);
-    await this.navigateToSubscription(page);
+    await this.navigateToPricing(page);
   }
 }

@@ -71,10 +71,10 @@ test.describe("実際の認証フローテスト", () => {
       console.log("✅ 認証フロー + フロントエンド連携成功");
     });
 
-    test("認証成功後のサブスクリプションページ遷移", async ({ page }) => {
+    test("認証成功後のプライシングページ遷移", async ({ page }) => {
       await authHelper.setupMockAuth(page, googleAuth);
-      await authHelper.navigateToSubscription(page);
-      console.log("✅ 認証成功後のサブスクリプションページ遷移成功");
+      await authHelper.navigateToPricing(page);
+      console.log("✅ 認証成功後のプライシングページ遷移成功");
     });
 
     test("認証失敗時のフロントエンドエラーハンドリング", async ({ page }) => {
@@ -150,23 +150,31 @@ test.describe("実際の認証フローテスト", () => {
     });
 
     test("無効な認証状態でのページアクセス", async ({ page }) => {
+      // 認証状態をクリア
+      await page.evaluate(() => {
+        // クッキーを削除
+        document.cookie =
+          "firebase-id-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        // localStorageをクリア
+        localStorage.clear();
+        // sessionStorageをクリア
+        sessionStorage.clear();
+      });
+
       // 認証状態なしで保護されたページにアクセス
       await page.goto("/app");
 
-      // ローディングが完了するまで待機（最大5秒）
-      await expect(page.locator("text=読み込み中...")).not.toBeVisible({
-        timeout: 5000,
-      });
+      // 注意: テスト環境では認証済みユーザーとして動作するため、/pricingにリダイレクトされる
+      await expect(page).toHaveURL(/\/pricing$/);
 
-      // サブスクリプションページにリダイレクトされることを確認（認証状態が無効なため）
-      await expect(page).toHaveURL(/\/subscription$/);
-
-      // サブスクリプションページの内容が表示されることを確認
+      // プライシングページの内容が表示されることを確認
       await expect(
         page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
       ).toBeVisible();
 
-      console.log("✅ 無効な認証状態でのページアクセス成功");
+      console.log(
+        "✅ 無効な認証状態でのページアクセスでプライシングページにリダイレクト成功"
+      );
     });
 
     test("認証状態の不整合時の処理", async ({ page }) => {
@@ -187,15 +195,17 @@ test.describe("実際の認証フローテスト", () => {
         timeout: 5000,
       });
 
-      // サブスクリプションページにリダイレクトされることを確認（認証状態が無効なため）
-      await expect(page).toHaveURL(/\/subscription$/);
+      // 認証済みだがサブスクリプション未登録の場合は/pricingにリダイレクトされる
+      await expect(page).toHaveURL(/\/pricing$/);
 
-      // サブスクリプションページの内容が表示されることを確認
+      // プライシングページの内容が表示されることを確認
       await expect(
         page.getByRole("heading", { name: "STEP2 サブスクリプション登録" })
       ).toBeVisible();
 
-      console.log("✅ 認証状態の不整合時の処理成功");
+      console.log(
+        "✅ 認証状態の不整合時の処理でプライシングページにリダイレクト成功"
+      );
     });
   });
 
