@@ -20,27 +20,33 @@ export default function LoginPage() {
 
   // ログインしていない場合の通常のレンダリング
   const handleLogin = async () => {
-    log('=== Login Process Start ===');
-    log('1. handleLogin called');
+    if (process.env.NODE_ENV === 'development') {
+      log('=== Login Process Start ===');
+      log('1. handleLogin called');
+    }
 
     setIsLoginLoading(true);
     clearError(); // エラーをクリア
 
     try {
-      log('2. Calling login() function');
+      if (process.env.NODE_ENV === 'development') {
+        log('2. Calling login() function');
+      }
       await login();
-      log('3. login() completed successfully');
-
-      log('4. Redirecting to /subscription');
-      router.push('/subscription');
-      log('5. router.push completed');
+      if (process.env.NODE_ENV === 'development') {
+        log('3. login() completed successfully');
+      }
     } catch (loginError) {
       logError('ログインエラー:', loginError);
-      // AuthContextでエラーが設定されるため、ここでは追加の処理は不要
-    } finally {
       setIsLoginLoading(false);
-      log('6. Login process finished');
+      // AuthContextでエラーが設定されるため、ここでは追加の処理は不要
     }
+
+    // リダイレクトが発生しない場合のみ実行される
+    if (process.env.NODE_ENV === 'development') {
+      log('6. Login process finished (no redirect occurred)');
+    }
+    setIsLoginLoading(false);
   };
 
   const handleBackToHome = async () => {
