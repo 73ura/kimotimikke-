@@ -2,18 +2,18 @@
 
 import type React from 'react';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { KokoronDefault, SpeechBubble } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { createChild, getChildrenCount } from '@/lib/api';
-import { KokoronDefault, SpeechBubble } from '@/components/ui';
 import {
+  borderRadius,
   colors,
   commonStyles,
-  spacing,
   fontSize,
-  borderRadius,
+  spacing,
 } from '@/styles/theme';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function SetupPage() {
   const { user, firebaseUser } = useAuth();
@@ -37,14 +37,33 @@ export default function SetupPage() {
 
           // 既に子供がいる場合は、アプリホームにリダイレクト
           if (count > 0) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('既に子供が登録済み - /appにリダイレクト');
+            }
             router.push('/app');
             return;
           }
         } catch (error) {
           console.error('子供の数取得エラー:', error);
+          // Firebase quota exceeded の場合は、とりあえずセットアップを続行
+          if (
+            error &&
+            typeof error === 'object' &&
+            'code' in error &&
+            error.code === 'auth/quota-exceeded'
+          ) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(
+                'Firebase quota exceeded - セットアップを続行します',
+              );
+            }
+            setChildrenCount(0); // セットアップが必要と仮定
+          }
         } finally {
           setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
     };
 
@@ -85,11 +104,13 @@ export default function SetupPage() {
         parseInt(childBirthDay),
       );
 
-      console.log('プロフィール保存:', {
-        childName,
-        birthDate: birthDate.toISOString().split('T')[0], // YYYY-MM-DD形式
-        childGender,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('プロフィール保存:', {
+          childName,
+          birthDate: birthDate.toISOString().split('T')[0], // YYYY-MM-DD形式
+          childGender,
+        });
+      }
 
       if (firebaseUser) {
         const childData = {
@@ -99,7 +120,9 @@ export default function SetupPage() {
         };
 
         const createdChild = await createChild(childData, firebaseUser);
-        console.log('子どもプロフィール作成完了:', createdChild);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('子どもプロフィール作成完了:', createdChild);
+        }
 
         // ダミーでユーザー情報を更新（既存のコードとの互換性のため）
         localStorage.setItem(
@@ -136,10 +159,7 @@ export default function SetupPage() {
       }}
     >
       <div style={commonStyles.page.mainContent}>
-        <SpeechBubble text={[
-          "はじめまして！",
-          "なんてよんだらいいかな？"
-        ]} />
+        <SpeechBubble text={['はじめまして！', 'なんてよんだらいいかな？']} />
 
         <div style={commonStyles.page.kokoronContainer}>
           <KokoronDefault size={200} />
@@ -245,19 +265,29 @@ export default function SetupPage() {
                     backgroundColor: colors.background.white,
                     boxSizing: 'border-box',
                     appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
+                    backgroundImage:
+                      'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
                     backgroundSize: '12px auto',
                     paddingRight: '32px',
                   }}
                 >
-                  <option value="" style={{ fontSize: '24px', padding: '16px' }}>年</option>
+                  <option
+                    value=""
+                    style={{ fontSize: '24px', padding: '16px' }}
+                  >
+                    年
+                  </option>
                   {Array.from(
                     { length: 18 },
                     (_, i) => new Date().getFullYear() - i,
                   ).map((year) => (
-                    <option key={year} value={year} style={{ fontSize: '24px', padding: '16px' }}>
+                    <option
+                      key={year}
+                      value={year}
+                      style={{ fontSize: '24px', padding: '16px' }}
+                    >
                       {year}年
                     </option>
                   ))}
@@ -278,14 +308,20 @@ export default function SetupPage() {
                     backgroundColor: colors.background.white,
                     boxSizing: 'border-box',
                     appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
+                    backgroundImage:
+                      'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
                     backgroundSize: '12px auto',
                     paddingRight: '32px',
                   }}
                 >
-                  <option value="" style={{ fontSize: '24px', padding: '16px' }}>月</option>
+                  <option
+                    value=""
+                    style={{ fontSize: '24px', padding: '16px' }}
+                  >
+                    月
+                  </option>
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
                     <option
                       key={month}
@@ -312,16 +348,26 @@ export default function SetupPage() {
                     backgroundColor: colors.background.white,
                     boxSizing: 'border-box',
                     appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
+                    backgroundImage:
+                      'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
                     backgroundSize: '12px auto',
                     paddingRight: '32px',
                   }}
                 >
-                  <option value="" style={{ fontSize: '24px', padding: '16px' }}>日</option>
+                  <option
+                    value=""
+                    style={{ fontSize: '24px', padding: '16px' }}
+                  >
+                    日
+                  </option>
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                    <option key={day} value={day.toString().padStart(2, '0')} style={{ fontSize: '24px', padding: '16px' }}>
+                    <option
+                      key={day}
+                      value={day.toString().padStart(2, '0')}
+                      style={{ fontSize: '24px', padding: '16px' }}
+                    >
                       {day}日
                     </option>
                   ))}
@@ -355,16 +401,23 @@ export default function SetupPage() {
                   backgroundColor: colors.background.white,
                   boxSizing: 'border-box',
                   appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
+                  backgroundImage:
+                    'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%204.9A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%204.9%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E")',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 8px center',
                   backgroundSize: '12px auto',
                   paddingRight: '32px',
                 }}
               >
-                <option value="" style={{ fontSize: '24px', padding: '16px' }}>せいべつ（こたえなくてもOKだよ）</option>
+                <option value="" style={{ fontSize: '24px', padding: '16px' }}>
+                  せいべつ（こたえなくてもOKだよ）
+                </option>
                 {['おとこのこ', 'おんなのこ', 'こたえない'].map((gender) => (
-                  <option key={gender} value={gender} style={{ fontSize: '24px', padding: '16px' }}>
+                  <option
+                    key={gender}
+                    value={gender}
+                    style={{ fontSize: '24px', padding: '16px' }}
+                  >
                     {gender}
                   </option>
                 ))}
@@ -391,7 +444,6 @@ export default function SetupPage() {
               </button>
             </div>
           </form>
-
         </div>
       </div>
     </div>
