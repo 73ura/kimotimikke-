@@ -24,56 +24,57 @@ export default function AppHomePage() {
     loading: subLoading,
     error,
   } = useSubscription();
-  const { todayEntry } = useTodayEntry();
+  const { todayEntry, isLoading: todayEntryLoading } = useTodayEntry();
   const { children, loading: childrenLoading } = useChildren();
   const router = useRouter();
 
-  // サブスク未登録の場合のチェック
-  const needsSubscription = !has_subscription || status === 'incomplete';
+  // サブスク未登録の場合のチェック（すべてのローディング完了後に判定）
+  const needsSubscription =
+    subLoading || childrenLoading || todayEntryLoading
+      ? false
+      : !has_subscription || status === 'incomplete';
 
   // childrenのニックネームがあるかどうかで判定
-  const needsSetup = !needsSubscription && children.length === 0;
+  // Firebase quota exceeded の場合はセットアップをスキップ
+  // ローディング中はセットアップ不要と判定
+  const needsSetup =
+    !needsSubscription && !childrenLoading && children.length === 0;
+
+  // デバッグ用（一時的）
+  if (process.env.NODE_ENV === 'development') {
+    console.log('=== リダイレクト判定デバッグ ===');
+    console.log('has_subscription:', has_subscription);
+    console.log('status:', status);
+    console.log('needsSubscription:', needsSubscription);
+    console.log('children.length:', children.length);
+    console.log('needsSetup:', needsSetup);
+    console.log('subLoading:', subLoading);
+    console.log('childrenLoading:', childrenLoading);
+    console.log('todayEntryLoading:', todayEntryLoading);
+    console.log('==============================');
+  }
 
   useEffect(() => {
-    // ローディング中は処理をスキップ
-    if (subLoading || childrenLoading) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('ローディング中: 処理をスキップ');
-      }
+    // ローディング中はリダイレクトしない
+    if (subLoading || childrenLoading || todayEntryLoading) {
       return;
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('=== useEffect デバッグ ===');
-      console.log('needsSubscription:', needsSubscription);
-      console.log('needsSetup:', needsSetup);
-      console.log('has_subscription:', has_subscription);
-      console.log('status:', status);
-      console.log('children count:', children.length);
-      console.log('========================');
-    }
-
     if (needsSubscription) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('リダイレクト: /subscription');
-      }
-      router.push('/subscription');
+      console.log('リダイレクト実行: /pricing (needsSubscription=true)');
+      router.push('/pricing');
     } else if (needsSetup) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('リダイレクト: /app/setup');
-      }
+      console.log('リダイレクト実行: /app/setup (needsSetup=true)');
       router.push('/app/setup');
     }
   }, [
     needsSubscription,
     needsSetup,
-    router,
-    has_subscription,
-    status,
     subLoading,
     childrenLoading,
-    children.length,
-  ]); // childrenLoadingとchildren.lengthも追加
+    todayEntryLoading,
+    router,
+  ]);
 
   // おしゃべりボタンが押された時の処理
   const handleStartEmotion = () => {
@@ -85,7 +86,7 @@ export default function AppHomePage() {
   };
 
   // ローディング中
-  if (subLoading || childrenLoading) {
+  if (subLoading || childrenLoading || todayEntryLoading) {
     return (
       <div style={commonStyles.loading.container}>
         <Spinner size="medium" />
@@ -100,16 +101,6 @@ export default function AppHomePage() {
   const getSpeechBubbleText = () => {
     return `${children[0]?.nickname || ''}、\n\nきょうも いっしょに きもちを \n\nたんけんしよう！`;
   };
-
-  // デバッグ情報を表示（一時的に）
-  console.log('=== デバッグ情報 ===');
-  console.log('has_subscription:', has_subscription);
-  console.log('status:', status);
-  console.log('trial:', is_trial);
-  console.log('trial_expires_at:', trial_expires_at);
-  console.log('loading:', subLoading);
-  console.log('error:', error);
-  console.log('========================');
 
   return (
     <div style={commonStyles.page.container}>
