@@ -127,15 +127,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/login`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id_token: idToken }),
-              credentials: 'include', // HttpOnly Cookieを受け取るため
-            },
-          );
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+          if (!apiBaseUrl) {
+            throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+          }
+
+          const res = await fetch(`${apiBaseUrl}/api/v1/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: idToken }),
+            credentials: 'include', // HttpOnly Cookieを受け取るため
+          });
           if (!res.ok) {
             const errorText = await res.text();
             const e = new Error(

@@ -49,19 +49,48 @@ export const useEmotionConfirmation = () => {
       return;
     }
 
+    // 強度レベルを文字列からIDに変換
+    const intensityLevelMap: { [key: string]: number } = {
+      low: 1,
+      medium: 2,
+      high: 3,
+    };
+
+    const intensityId =
+      intensityLevelMap[intensityLevel] || parseInt(intensityLevel);
+
+    console.log('🎯 感情確認: デバッグ情報', {
+      emotionId,
+      intensityLevel,
+      intensityId,
+      intensityLevelMap,
+    });
+
+    if (!intensityId) {
+      console.error('🎯 感情確認: 無効な強度レベル', intensityLevel);
+      setError('無効な強度レベルです');
+      return;
+    }
+
     const fetchEmotionData = async () => {
       setIsLoadingData(true);
       setError(null);
 
       try {
+        // 認証トークンを取得
+        const idToken = firebaseUser ? await firebaseUser.getIdToken() : null;
+
         const [emotionResponse, intensityResponse, childrenResponse] =
           await Promise.all([
             fetch(API_ENDPOINTS.EMOTION_CARDS),
             fetch(API_ENDPOINTS.EMOTION_INTENSITIES),
-            fetch(API_ENDPOINTS.EMOTION_CHILDREN, {
-              headers: {
-                Authorization: `Bearer ${await firebaseUser!.getIdToken()}`,
-              },
+            fetch(API_ENDPOINTS.EMOTION_CHILDREN(user?.uid || ''), {
+              headers: idToken
+                ? {
+                    Authorization: `Bearer ${idToken}`,
+                    'Content-Type': 'application/json',
+                  }
+                : {},
             }),
           ]);
 
@@ -77,21 +106,18 @@ export const useEmotionConfirmation = () => {
         const intensityData = await intensityResponse.json();
         const childrenData = await childrenResponse.json();
 
-        if (
-          emotionData.success &&
-          intensityData.success &&
-          childrenData.success
-        ) {
+        if (emotionData.success && intensityData.success && childrenData) {
           console.log('🎯 感情確認: 感情データ取得成功');
           console.log('🎯 感情確認: 強度データ取得成功');
           console.log('🎯 感情確認: 子供データ取得成功');
 
-          setChildren(childrenData.children);
+          const childrenArray = childrenData.children || childrenData || [];
+          setChildren(childrenArray);
 
           // 子供が1人しかいない場合は自動選択
-          if (childrenData.children.length === 1) {
-            setSelectedChild(childrenData.children[0]);
-          } else if (childrenData.children.length === 0) {
+          if (childrenArray.length === 1) {
+            setSelectedChild(childrenArray[0]);
+          } else if (childrenArray.length === 0) {
             setError(
               '子供の登録がありません。設定画面で子供を登録してください。',
             );
@@ -107,17 +133,18 @@ export const useEmotionConfirmation = () => {
             setSelectedEmotion(emotion);
 
             const intensity = INTENSITY_LEVELS.find(
-              (level) => level.level === intensityLevel,
+              (level) => level.id === intensityId,
             );
             console.log(
               '🎯 感情確認: 強度レベル検索結果:',
               intensityLevel,
+              intensityId,
               intensity,
             );
 
             if (intensity) {
               const intensityDataItem = intensityData.intensities.find(
-                (i: any) => i.id === intensity.id,
+                (i: any) => i.id === intensityId,
               );
               console.log(
                 '🎯 感情確認: 強度データ検索結果:',

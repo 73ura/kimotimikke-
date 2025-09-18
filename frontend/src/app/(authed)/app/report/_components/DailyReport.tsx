@@ -295,13 +295,18 @@ export default function DailyReport({ onClose }: DailyReportProps) {
         return null;
       }
 
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!apiBaseUrl) {
+        throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+      }
+
       console.log(
         '[DEBUG] API呼び出し:',
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/voice/records/${user.id}`,
+        `${apiBaseUrl}/api/v1/voice/records/${user.id}`,
       );
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/voice/records/${user.id}`,
+        `${apiBaseUrl}/api/v1/voice/records/${user.id}`,
       );
 
       if (!response.ok) {

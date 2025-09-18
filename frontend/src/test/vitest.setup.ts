@@ -1,6 +1,6 @@
 // NOTE: テスト環境のセットアップファイル
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -14,7 +14,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -27,9 +27,12 @@ vi.mock('next/navigation', () => ({
   }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/',
-}))
+}));
 
 vi.mock('@/lib/firebase', () => ({
   auth: {},
   db: {},
-})) 
+}));
+
+// 環境変数のモック設定
+process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:8000';

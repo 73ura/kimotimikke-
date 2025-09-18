@@ -36,10 +36,15 @@ export const useSubscription = () => {
       return;
     }
 
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!apiBaseUrl) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
     try {
       const idToken = await firebaseUser.getIdToken();
       const response = await fetch(
-        'http://localhost:8000/api/v1/stripe/subscription/status',
+        `${apiBaseUrl}/api/v1/stripe/subscription/status`,
         {
           headers: {
             Authorization: `Bearer ${idToken}`,

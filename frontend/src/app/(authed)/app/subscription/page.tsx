@@ -48,8 +48,13 @@ export default function SubscriptionManagePage() {
         throw new Error('ユーザー情報が取得できません');
       }
       const idToken = await firebaseUser.getIdToken();
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!apiBaseUrl) {
+        throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+      }
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/stripe/subscription/cancel`,
+        `${apiBaseUrl}/api/v1/stripe/subscription/cancel`,
         {
           method: 'POST',
           headers: {
