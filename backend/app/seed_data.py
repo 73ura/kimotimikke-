@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import EmotionCard, Intensity
+from sqlalchemy import select
+from app.models import EmotionCard, Intensity, RoleplayScenario, RoleplayAdvice
 
 
 async def seed_emotion_cards(db: AsyncSession):
@@ -105,12 +106,123 @@ async def seed_intensities(db: AsyncSession):
     print(f"✅ {len(intensities)}個の強度をシードしました")
 
 
+async def seed_roleplay_scenarios(db: AsyncSession):
+    """ロールプレイシナリオのシードデータを作成"""
+    scenarios_data = [
+        {
+            "title": "おもちゃをおともだちにとられた",
+            "description": "おともだちに おもちゃを とられたら…どんな きもちかな？",
+            "color": "#FF6B6B",
+            "scenario_content": "おともだちがあなたのお気に入りのおもちゃを取ってしまいました。この時、どんな気持ちになりますか？",
+            "emotion_types": ["kanashii", "ikari", "komatta"],
+            "keywords": ["おもちゃ", "とられた", "おともだち", "いやだ"],
+            "age_range_min": 3,
+            "age_range_max": 8,
+            "difficulty_level": 1,
+            "sort_order": 1,
+        },
+        {
+            "title": "おともだちとけんかしちゃった",
+            "description": "おともだちと けんかを してしまったら…どんな きもちかな？",
+            "color": "#4ECDC4",
+            "scenario_content": "おともだちと意見が合わずにけんかをしてしまいました。この時、どんな気持ちになりますか？",
+            "emotion_types": ["ikari", "kanashii", "komatta"],
+            "keywords": ["けんか", "おともだち", "いかり", "かなしい"],
+            "age_range_min": 3,
+            "age_range_max": 8,
+            "difficulty_level": 2,
+            "sort_order": 2,
+        },
+        {
+            "title": "はっぴょうかいでセリフをまちがえた",
+            "description": "はっぴょうかいで セリフを まちがえたら…どんな きもちかな？",
+            "color": "#51cf66",
+            "scenario_content": "みんなの前で発表会をしている時に、セリフを間違えてしまいました。この時、どんな気持ちになりますか？",
+            "emotion_types": ["kanashii", "komatta", "fuyukai"],
+            "keywords": ["はっぴょうかい", "セリフ", "まちがえた", "はずかしい"],
+            "age_range_min": 4,
+            "age_range_max": 8,
+            "difficulty_level": 2,
+            "sort_order": 3,
+        },
+        {
+            "title": "おもちゃをかってもらえなかった",
+            "description": "おもちゃを かってもらえなかったら…どんな きもちかな？",
+            "color": "#ff8cc8",
+            "scenario_content": "お店で欲しいおもちゃを見つけたけれど、お父さんやお母さんに買ってもらえませんでした。この時、どんな気持ちになりますか？",
+            "emotion_types": ["kanashii", "ikari", "komatta"],
+            "keywords": ["おもちゃ", "かってもらえない", "ほしい", "かなしい"],
+            "age_range_min": 3,
+            "age_range_max": 7,
+            "difficulty_level": 1,
+            "sort_order": 4,
+        },
+        {
+            "title": "えを「へただね」といわれた",
+            "description": "えを「へただね」と いわれたら…どんな きもちかな？",
+            "color": "#74c0fc",
+            "scenario_content": "一生懸命描いた絵を誰かに「へただね」と言われてしまいました。この時、どんな気持ちになりますか？",
+            "emotion_types": ["kanashii", "ikari", "fuyukai"],
+            "keywords": ["え", "へた", "いわれた", "かなしい", "いかり"],
+            "age_range_min": 3,
+            "age_range_max": 8,
+            "difficulty_level": 2,
+            "sort_order": 5,
+        },
+    ]
+    
+    # シナリオを作成
+    created_scenarios = []
+    for scenario_data in scenarios_data:
+        scenario = RoleplayScenario(**scenario_data)
+        db.add(scenario)
+        created_scenarios.append(scenario)
+    
+    await db.commit()
+    
+    # 各シナリオのIDを取得
+    for scenario in created_scenarios:
+        await db.refresh(scenario)
+    
+    print(f"✅ {len(created_scenarios)} 件のシナリオをシードしました")
+    
+    # アドバイスデータを作成
+    await seed_roleplay_advice(db, created_scenarios)
+
+
+async def seed_roleplay_advice(db: AsyncSession, scenarios: list[RoleplayScenario]):
+    """ロールプレイアドバイスのシードデータを作成"""
+    
+    # アドバイスデータ
+    advice_data = {
+        "kanashii": "「かなしいよ」って いってみよう",
+        "komatta": "「どうしたらいい？」って\nきいてみよう", 
+        "fuyukai": "「いやだな」って いってみよう",
+        "ikari": "いきを「すーっ」「はーっ」と\nゆっくりしてみよう",
+    }
+    
+    created_advice = []
+    
+    for scenario in scenarios:
+        # 各シナリオの対象感情に対してアドバイスを作成
+        for emotion_id in scenario.emotion_types:
+            if emotion_id in advice_data:
+                advice = RoleplayAdvice(
+                    scenario_id=scenario.id,
+                    emotion_id=emotion_id,
+                    advice_text=advice_data[emotion_id],
+                    advice_type="general"
+                )
+                db.add(advice)
+                created_advice.append(advice)
+    
+    await db.commit()
+    print(f"✅ {len(created_advice)} 件のアドバイスをシードしました")
+
+
 async def run_seeds(db: AsyncSession):
     """全てのシードを実行"""
     print("シードデータを作成中...")
-
-    # 既存データをチェック
-    from sqlalchemy import select
 
     # 感情カードのチェック
     result = await db.execute(select(EmotionCard))
@@ -127,5 +239,13 @@ async def run_seeds(db: AsyncSession):
         await seed_intensities(db)
     else:
         print(f"⚠️ 強度は既に{len(existing_intensities)}個存在します")
+
+    # ロールプレイシナリオのチェック
+    result = await db.execute(select(RoleplayScenario))
+    existing_scenarios = result.scalars().all()
+    if not existing_scenarios:
+        await seed_roleplay_scenarios(db)
+    else:
+        print(f"⚠️ ロールプレイシナリオは既に{len(existing_scenarios)}件存在します")
 
     print("✅ シード完了！")
