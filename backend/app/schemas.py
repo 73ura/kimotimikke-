@@ -16,7 +16,7 @@ from pydantic import (
 
 
 # -------------------
-# 認証・ユーザー系
+# 認証・ユーザー用スキーマ
 # -------------------
 class Token(BaseModel):
     id_token: str
@@ -38,7 +38,7 @@ class UserResponse(UserBase):
 
 
 # -------------------
-# 子供系スキーマ
+# 子供用スキーマ
 # -------------------
 class ChildBase(BaseModel):
     nickname: str
@@ -99,7 +99,7 @@ class CheckoutSessionResponse(BaseModel):
 
 
 # -------------------
-# 音声系スキーマ
+# 音声用スキーマ
 # -------------------
 
 # 現状エンドポイントは音声のみをpresignする想定
@@ -271,3 +271,67 @@ class VoiceTranscribeResponse(StrictModel):
 
 class SessionStatusRequest(BaseModel):
     session_id: str
+
+
+# -------------------
+# ロールプレイ用スキーマ
+# -------------------
+class RoleplayScenarioResponse(BaseModel):
+    id: UUID
+    title: str
+    description: Optional[str] = None
+    color: str
+    scenario_content: str
+    image_url: Optional[str] = None
+    emotion_types: list[str]
+    keywords: list[str]
+    age_range_min: int
+    age_range_max: int
+    difficulty_level: int
+    is_active: bool
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplayAdviceResponse(BaseModel):
+    id: UUID
+    scenario_id: UUID
+    emotion_id: str
+    advice_text: str
+    advice_type: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplaySessionRequest(BaseModel):
+    child_id: UUID
+    scenario_id: UUID
+    emotion_log_id: Optional[UUID] = None
+    selected_emotion_id: Optional[str] = None
+
+
+class RoleplaySessionResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    child_id: UUID
+    scenario_id: UUID
+    emotion_log_id: Optional[UUID] = None
+    selected_emotion_id: Optional[str] = None
+    session_duration: Optional[int] = None
+    completion_status: str
+    user_rating: Optional[int] = None
+    user_feedback: Optional[str] = None
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplaySessionUpdateRequest(BaseModel):
+    session_duration: Optional[int] = None
+    completion_status: Optional[Literal["started", "completed", "abandoned"]] = None
+    user_rating: Optional[int] = Field(None, ge=1, le=5)
+    user_feedback: Optional[str] = None
