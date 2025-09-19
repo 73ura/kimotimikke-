@@ -10,9 +10,11 @@ from sqlalchemy import (
     func,
     Date,
     text,
+    CheckConstraint,
+    Index,
 )
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -58,6 +60,7 @@ class User(Base):
     daily_reports = relationship("DailyReport", back_populates="user")
     weekly_reports = relationship("WeeklyReport", back_populates="user")
     report_notifications = relationship("ReportNotification", back_populates="user")
+    roleplay_sessions = relationship("RoleplaySession")
 
 
 class Subscription(Base):
@@ -127,6 +130,7 @@ class Child(Base):
     daily_reports = relationship("DailyReport", back_populates="child")
     weekly_reports = relationship("WeeklyReport", back_populates="child")
     report_notifications = relationship("ReportNotification", back_populates="child")
+    roleplay_sessions = relationship("RoleplaySession")
 
 
 class EmotionCard(Base):
@@ -196,6 +200,7 @@ class EmotionLog(Base):
     daily_report = relationship(
         "DailyReport", back_populates="emotion_log", uselist=False
     )
+    roleplay_sessions = relationship("RoleplaySession")
 
 
 class DailyReport(Base):
@@ -290,3 +295,145 @@ class ReportNotification(Base):
     # Relationships
     user = relationship("User", back_populates="report_notifications")
     child = relationship("Child", back_populates="report_notifications")
+
+
+class RoleplayScenario(Base):
+    __tablename__ = "roleplay_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    color: Mapped[str] = mapped_column(String(7), nullable=False)  # HEXカラーコード
+    scenario_content: Mapped[str] = mapped_column(Text, nullable=False)  # ロールプレイの詳細内容
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)  # シナリオ画像パス
+    emotion_types: Mapped[list[str]] = mapped_column(ARRAY(String(32)), nullable=False)  # 対象感情の配列
+    keywords: Mapped[list[str]] = mapped_column(ARRAY(String(64)), nullable=False)  # マッチング用キーワード
+    age_range_min: Mapped[int] = mapped_column(Integer, default=3, server_default=text('3'), nullable=False)
+    age_range_max: Mapped[int] = mapped_column(Integer, default=8, server_default=text('8'), nullable=False)
+    difficulty_level: Mapped[int] = mapped_column(Integer, default=1, server_default=text('1'), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text('true'), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default=text('0'), nullable=False)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint('age_range_min >= 1', name='check_age_range_min'),
+        CheckConstraint('age_range_max <= 12', name='check_age_range_max'),
+        CheckConstraint('age_range_min <= age_range_max', name='check_age_range_order'),
+        CheckConstraint('difficulty_level BETWEEN 1 AND 5', name='check_difficulty_level'),
+        CheckConstraint("color ~ '^#[0-9A-Fa-f]{6}$'", name='check_color_hex'),
+        CheckConstraint('cardinality(emotion_types) > 0', name='check_emotion_types_nonempty'),
+        CheckConstraint('cardinality(keywords) > 0', name='check_keywords_nonempty'),
+        # Indexes for performance
+        Index('ix_roleplay_scenarios_is_active', 'is_active'),
+    )
+
+    # Relationships
+    advice = relationship("RoleplayAdvice", back_populates="scenario", cascade="all, delete-orphan")
+    sessions = relationship("RoleplaySession", back_populates="scenario")
+
+
+class RoleplayAdvice(Base):
+    __tablename__ = "roleplay_advice"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    scenario_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("roleplay_scenarios.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    emotion_id: Mapped[str] = mapped_column(String(50), nullable=False)  # 感情ID（emotion_cards.idと連携）
+    advice_text: Mapped[str] = mapped_column(Text, nullable=False)
+    advice_type: Mapped[str] = mapped_column(String(50), default="general", server_default=text("'general'"), nullable=False)  # 'general', 'breathing', 'communication'
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint('advice_type IN (\'general\', \'breathing\', \'communication\')', name='check_advice_type'),
+    )
+
+    # Relationships
+    scenario = relationship("RoleplayScenario", back_populates="advice")
+
+
+class RoleplaySession(Base):
+    __tablename__ = "roleplay_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    child_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("children.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    scenario_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("roleplay_scenarios.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    emotion_log_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("emotion_logs.id"), nullable=True
+    )  # きっかけとなった感情記録
+    selected_emotion_id: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 選択された感情
+    session_duration: Mapped[int | None] = mapped_column(Integer, nullable=True)  # セッション時間（秒）
+    completion_status: Mapped[str] = mapped_column(String(20), default="started", server_default=text("'started'"), nullable=False)  # 'started', 'completed', 'abandoned'
+    user_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    user_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    completed_at: Mapped[DateTime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint('completion_status IN (\'started\', \'completed\', \'abandoned\')', name='check_completion_status'),
+        CheckConstraint('user_rating BETWEEN 1 AND 5', name='check_user_rating'),
+        CheckConstraint(
+            "(completion_status <> 'completed') OR (completed_at IS NOT NULL)",
+            name='check_completed_has_timestamp'
+        ),
+        CheckConstraint('session_duration IS NULL OR session_duration >= 0', name='check_duration_nonnegative'),
+        # Indexes for performance
+        Index('ix_roleplay_sessions_user', 'user_id'),
+        Index('ix_roleplay_sessions_child', 'child_id'),
+    )
+
+    # Relationships
+    user = relationship("User")
+    child = relationship("Child")
+    scenario = relationship("RoleplayScenario", back_populates="sessions")
+    emotion_log = relationship("EmotionLog")
