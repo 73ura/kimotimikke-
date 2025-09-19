@@ -16,6 +16,7 @@ from app.utils.error_handlers import register_error_handlers
 from app.api.v1.endpoints.emotion_color_api import router as emotion_color_router
 from app.api.v1.endpoints.emotion_api import router as emotion_router
 from app.api.v1.endpoints.stripe_api import router as stripe_router
+from app.api.v1.endpoints.roleplay import router as roleplay_router
 
 logging.basicConfig(level=logging.INFO, force=True)
 logger = logging.getLogger(__name__)
@@ -84,3 +85,4 @@ app.include_router(children_router, prefix="/api/v1/children")
 app.include_router(emotion_router)
 app.include_router(emotion_color_router)
 app.include_router(stripe_router)
+app.include_router(roleplay_router, prefix="/api/v1/roleplay")
