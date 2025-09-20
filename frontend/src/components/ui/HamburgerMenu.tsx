@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useChildContext } from '@/contexts/ChildContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { colors, commonStyles, animation, spacing } from '@/styles/theme';
+import { animation, colors, spacing } from '@/styles/theme';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface HamburgerMenuProps {
   children?: React.ReactNode;
@@ -13,17 +14,28 @@ interface HamburgerMenuProps {
   width?: string;
 }
 
-export default function HamburgerMenu({ 
-  children, 
+export default function HamburgerMenu({
+  children,
   className = '',
   style = {},
   position = 'right',
-  width = '300px'
+  width = '300px',
 }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
-  const { has_subscription, status, is_trial, trial_expires_at, loading: subLoading } = useSubscription();
+  const {
+    selectedChild,
+    children: childrenData,
+    switchToChild,
+  } = useChildContext();
+  const {
+    has_subscription,
+    status,
+    is_trial,
+    trial_expires_at,
+    loading: subLoading,
+  } = useSubscription();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -107,9 +119,10 @@ export default function HamburgerMenu({
     width: '280px',
     height: '100vh',
     background: colors.background.white,
-    boxShadow: position === 'right' 
-      ? '-2px 0 10px rgba(0, 0, 0, 0.1)' 
-      : '2px 0 10px rgba(0, 0, 0, 0.1)',
+    boxShadow:
+      position === 'right'
+        ? '-2px 0 10px rgba(0, 0, 0, 0.1)'
+        : '2px 0 10px rgba(0, 0, 0, 0.1)',
     transition: animation.transition,
     zIndex: 999,
   };
@@ -150,38 +163,44 @@ export default function HamburgerMenu({
       {/* ドロワーメニュー */}
       <div style={drawerMenuStyle}>
         {/* 閉じるボタン */}
-        <button 
+        <button
           onClick={closeMenu}
           style={closeButtonStyle}
           aria-label="メニューを閉じる"
         >
           ×
         </button>
-        
+
         {/* メニューコンテンツ */}
-        <div style={{ 
-          padding: spacing.md, 
-          paddingTop: '60px', 
-          height: '100vh', 
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: spacing.xs,
-        }}>
+        <div
+          style={{
+            padding: spacing.md,
+            paddingTop: '60px',
+            height: '100vh',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing.xs,
+          }}
+        >
           {/* サブスクリプション状態表示 */}
-          <div style={{
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            padding: spacing.sm,
-            marginBottom: spacing.sm,
-            border: '1px solid #e0e0e0',
-          }}>
-            <p style={{
-              margin: 0,
-              fontSize: '12px',
-              color: '#666',
-              textAlign: 'center',
-            }}>
+          <div
+            style={{
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              padding: spacing.sm,
+              marginBottom: spacing.sm,
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: '12px',
+                color: '#666',
+                textAlign: 'center',
+              }}
+            >
               {getSubscriptionStatus()}
             </p>
           </div>
@@ -217,9 +236,7 @@ export default function HamburgerMenu({
           </MenuItem>
 
           {/* FAQ */}
-          <MenuItem onClick={() => handleNavigation('/app/faq')}>
-            FAQ
-          </MenuItem>
+          <MenuItem onClick={() => handleNavigation('/app/faq')}>FAQ</MenuItem>
 
           {/* 設定 */}
           <MenuItem onClick={() => handleNavigation('/app/setup')}>
@@ -246,11 +263,52 @@ export default function HamburgerMenu({
             料金・解約について
           </MenuItem>
 
+          {/* 子供切り替え（複数の子供がいる場合のみ表示） */}
+          {childrenData.length > 1 && (
+            <>
+              <div
+                style={{
+                  padding: `${spacing.sm} ${spacing.md}`,
+                  borderTop: `1px solid ${colors.border.light}`,
+                  borderBottom: `1px solid ${colors.border.light}`,
+                  backgroundColor: colors.background.light,
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  color: colors.text.secondary,
+                }}
+              >
+                子供を切り替え
+              </div>
+              {childrenData.map((child) => (
+                <MenuItem
+                  key={child.id}
+                  onClick={() => {
+                    switchToChild(child.id);
+                    closeMenu();
+                  }}
+                  style={{
+                    backgroundColor:
+                      selectedChild?.id === child.id
+                        ? colors.primary
+                        : 'transparent',
+                    color:
+                      selectedChild?.id === child.id
+                        ? colors.text.white
+                        : colors.text.primary,
+                  }}
+                >
+                  {child.nickname}ちゃん
+                  {selectedChild?.id === child.id && ' ✓'}
+                </MenuItem>
+              ))}
+            </>
+          )}
+
           {/* カスタムコンテンツ */}
           {children}
 
           {/* ログアウト */}
-          <MenuItem 
+          <MenuItem
             onClick={handleLogout}
             style={{
               color: '#f44336',
@@ -272,11 +330,11 @@ interface MenuItemProps {
   style?: React.CSSProperties;
 }
 
-export function MenuItem({ 
-  children, 
+export function MenuItem({
+  children,
   onClick,
   disabled = false,
-  style = {}
+  style = {},
 }: MenuItemProps) {
   const itemStyle: React.CSSProperties = {
     width: '100%',
@@ -320,4 +378,4 @@ export function MenuItem({
       {children}
     </button>
   );
-} 
+}
