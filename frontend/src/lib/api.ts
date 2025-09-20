@@ -520,21 +520,25 @@ export const getRoleplayAdvice = async (
   firebaseUser: User,
 ) => {
   try {
+    console.log('=== getRoleplayAdvice API呼び出し ===');
+    console.log('scenarioId:', scenarioId);
+    console.log('emotionId:', emotionId);
+
     const idToken = await firebaseUser.getIdToken(true);
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!API_BASE_URL) {
       throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/v1/roleplay/advice?scenario_id=${scenarioId}&emotion_id=${emotionId}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
+    const url = `${API_BASE_URL}/api/v1/roleplay/advice?scenario_id=${scenarioId}&emotion_id=${emotionId}`;
+    console.log('API URL:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
       },
-    );
+    });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
@@ -544,6 +548,7 @@ export const getRoleplayAdvice = async (
     }
 
     const result = await response.json();
+    console.log('API Response:', result);
     return result;
   } catch (error) {
     console.error('Get roleplay advice error:', error);
