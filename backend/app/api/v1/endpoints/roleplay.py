@@ -129,6 +129,8 @@ async def get_roleplay_advice(
 ):
     """ロールプレイアドバイスを取得"""
     try:
+        logger.info(f"アドバイス取得リクエスト: scenario_id={scenario_id}, emotion_id={emotion_id}")
+        
         result = await db.execute(
             select(RoleplayAdvice).where(
                 and_(
@@ -138,6 +140,8 @@ async def get_roleplay_advice(
             )
         )
         advice_list = result.scalars().all()
+        
+        logger.info(f"データベースから取得したアドバイス数: {len(advice_list)}")
         
         if not advice_list:
             # デフォルトアドバイスを返す
@@ -246,6 +250,9 @@ async def update_roleplay_session(
             raise HTTPException(status_code=403, detail="このセッションを更新する権限がありません")
         
         # 更新データの適用
+        if request.selected_emotion_id is not None:
+            session.selected_emotion_id = request.selected_emotion_id
+        
         if request.session_duration is not None:
             session.session_duration = request.session_duration
         

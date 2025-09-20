@@ -331,6 +331,7 @@ class RoleplaySessionResponse(BaseModel):
 
 
 class RoleplaySessionUpdateRequest(BaseModel):
+    selected_emotion_id: Optional[str] = None
     session_duration: Optional[int] = None
     completion_status: Optional[Literal["started", "completed", "abandoned"]] = None
     user_rating: Optional[int] = Field(None, ge=1, le=5)
