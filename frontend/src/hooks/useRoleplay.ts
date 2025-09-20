@@ -41,12 +41,15 @@ export const useRoleplay = (childId?: string) => {
   }, [currentChild]);
 
   // シナリオ一覧を取得（子供の年齢に基づいてフィルタリング）
+  // 1-2歳の場合は年齢制限を緩和して3歳以上のシナリオも表示
+  const effectiveAge = childAge && childAge < 3 ? 3 : childAge;
+
   const {
-    scenarios,
+    scenarios = [], // デフォルト値を空配列に設定
     loading: scenariosLoading,
     error: scenariosError,
   } = useRoleplayScenarios(
-    childAge,
+    effectiveAge,
     undefined, // 難易度は指定しない
     50,
     0,
@@ -64,7 +67,7 @@ export const useRoleplay = (childId?: string) => {
 
   // セッション一覧を取得
   const {
-    sessions,
+    sessions = [], // デフォルト値を空配列に設定
     loading: sessionsLoading,
     error: sessionsError,
   } = useRoleplaySessions(childId, 50, 0);
@@ -99,7 +102,7 @@ export const useRoleplay = (childId?: string) => {
   };
 
   // 感情選択
-  const selectEmotion = (emotionId: string) => {
+  const selectEmotion = (emotionId: string | undefined) => {
     setRoleplayState((prev) => ({
       ...prev,
       selectedEmotion: emotionId,
@@ -107,15 +110,16 @@ export const useRoleplay = (childId?: string) => {
   };
 
   // セッション開始
-  const startSession = async () => {
-    if (!roleplayState.selectedScenario || !childId) {
+  const startSession = async (scenarioId?: string) => {
+    const targetScenarioId = scenarioId || roleplayState.selectedScenario;
+    if (!targetScenarioId || !childId) {
       throw new Error('シナリオと子供が選択されていません');
     }
 
     try {
       const sessionData = {
         child_id: childId,
-        scenario_id: roleplayState.selectedScenario,
+        scenario_id: targetScenarioId,
         selected_emotion_id: roleplayState.selectedEmotion || undefined,
       };
 
@@ -148,6 +152,7 @@ export const useRoleplay = (childId?: string) => {
 
       const updateData = {
         completion_status: 'completed' as const,
+        selected_emotion_id: roleplayState.selectedEmotion || undefined,
         session_duration: sessionDuration,
         user_rating: rating,
         user_feedback: feedback,
@@ -217,7 +222,7 @@ export const useRoleplay = (childId?: string) => {
   // 選択されたシナリオの詳細を取得
   const selectedScenarioDetail = useMemo(
     () =>
-      scenarios.find(
+      scenarios?.find(
         (scenario) => scenario.id === roleplayState.selectedScenario,
       ),
     [scenarios, roleplayState.selectedScenario],
@@ -260,6 +265,7 @@ export const useRoleplay = (childId?: string) => {
     startSession,
     completeSession,
     abandonSession,
+    updateSession,
     resetRoleplayState,
   };
 };

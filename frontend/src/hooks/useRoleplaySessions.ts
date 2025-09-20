@@ -52,6 +52,7 @@ export interface CreateSessionData {
 }
 
 export interface UpdateSessionData {
+  selected_emotion_id?: string;
   session_duration?: number;
   completion_status?: 'started' | 'completed' | 'abandoned';
   user_rating?: number;

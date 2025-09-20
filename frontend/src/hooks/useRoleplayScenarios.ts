@@ -34,12 +34,13 @@ export interface RoleplayScenario {
   updated_at: string;
 }
 
-export interface RoleplayScenariosResponse {
-  scenarios: RoleplayScenario[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+// APIが配列を直接返すため、この型定義は使用しない
+// export interface RoleplayScenariosResponse {
+//   scenarios: RoleplayScenario[];
+//   total: number;
+//   limit: number;
+//   offset: number;
+// }
 
 export const useRoleplayScenarios = (
   childAge?: number,
@@ -65,15 +66,17 @@ export const useRoleplayScenarios = (
       try {
         setLoading(true);
         setError(null);
-        const response: RoleplayScenariosResponse = await getRoleplayScenarios(
+        const response = await getRoleplayScenarios(
           firebaseUser,
           childAge,
           difficultyLevel,
           limit,
           offset,
         );
-        setScenarios(response.scenarios);
-        setTotal(response.total);
+
+        // APIが配列を直接返すので、そのまま使用
+        setScenarios(response);
+        setTotal(response.length);
       } catch (err) {
         console.error('Failed to fetch roleplay scenarios:', err);
 
