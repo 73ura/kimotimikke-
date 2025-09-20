@@ -1,12 +1,10 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useChildContext } from '@/contexts/ChildContext';
+import { useSwipe } from '@/hooks/useSwipe';
 import { useTodayEntry } from '@/hooks/useTodayEntry';
-import {
-  getEmotionCards,
-  getEmotionLogsByMonth,
-  getIntensities,
-} from '@/lib/api';
+import { getEmotionLogsByMonth, getIntensities } from '@/lib/api';
 import { borderRadius, colors, fontSize, spacing } from '@/styles/theme';
 import { useEffect, useState } from 'react';
 
@@ -28,13 +26,6 @@ interface EmotionLogData {
   intensity_id?: number;
 }
 
-interface EmotionCard {
-  id: string;
-  label: string;
-  image_url: string;
-  color: string;
-}
-
 interface Intensity {
   id: number;
   color_modifier: number;
@@ -42,7 +33,17 @@ interface Intensity {
 
 export default function DailyReport({ onClose }: DailyReportProps) {
   const { user, firebaseUser } = useAuth();
-  const { todayEntry, isLoading: isTodayEntryLoading } = useTodayEntry();
+  const { selectedChild, children, switchToNextChild, switchToPreviousChild } =
+    useChildContext();
+  const { todayEntry } = useTodayEntry();
+
+  // スワイプ機能（複数の子供がいる場合のみ有効）
+  const enableSwipe = children.length > 1;
+  const { swipeHandlers } = useSwipe({
+    onSwipeLeft: enableSwipe ? switchToNextChild : undefined,
+    onSwipeRight: enableSwipe ? switchToPreviousChild : undefined,
+    threshold: 50,
+  });
 
   // JST時刻で初期化
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -61,7 +62,6 @@ export default function DailyReport({ onClose }: DailyReportProps) {
   });
 
   const [emotionLogs, setEmotionLogs] = useState<EmotionLogData[]>([]);
-  const [emotionCards, setEmotionCards] = useState<EmotionCard[]>([]);
   const [intensities, setIntensities] = useState<Intensity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -102,13 +102,11 @@ export default function DailyReport({ onClose }: DailyReportProps) {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
 
-        const [logs, cardsData, intensitiesData] = await Promise.all([
+        const [logs, intensitiesData] = await Promise.all([
           getEmotionLogsByMonth(firebaseUser, year, month),
-          getEmotionCards(firebaseUser),
           getIntensities(firebaseUser),
         ]);
 
-        setEmotionCards(cardsData.cards || []);
         setIntensities(intensitiesData.intensities || []);
 
         // 感情ログデータを変換
@@ -155,7 +153,6 @@ export default function DailyReport({ onClose }: DailyReportProps) {
       } catch (error) {
         console.error('Failed to fetch data:', error);
         setEmotionLogs([]);
-        setEmotionCards([]);
         setIntensities([]);
       } finally {
         setIsLoading(false);
@@ -238,7 +235,6 @@ export default function DailyReport({ onClose }: DailyReportProps) {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
@@ -318,7 +314,9 @@ export default function DailyReport({ onClose }: DailyReportProps) {
       console.log('[DEBUG] API応答:', data);
 
       // 該当する音声ファイルのダウンロードURLを探す
-      const record = data.records.find((r: any) => r.audio_path === audioPath);
+      const record = data.records.find(
+        (r: { audio_path: string }) => r.audio_path === audioPath,
+      );
       console.log('[DEBUG] 該当レコード:', record);
 
       return record?.audio_download_url || null;
@@ -438,6 +436,7 @@ export default function DailyReport({ onClose }: DailyReportProps) {
         alignItems: 'center',
         zIndex: 1000,
       }}
+      {...swipeHandlers}
     >
       <div
         style={{
@@ -487,6 +486,17 @@ export default function DailyReport({ onClose }: DailyReportProps) {
             }}
           >
             まいにちのきろく
+            {selectedChild && (
+              <span
+                style={{
+                  fontSize: fontSize.base,
+                  fontWeight: 'normal',
+                  marginLeft: spacing.sm,
+                }}
+              >
+                - {selectedChild.nickname}
+              </span>
+            )}
           </h2>
         </div>
 
@@ -606,29 +616,38 @@ export default function DailyReport({ onClose }: DailyReportProps) {
               const isCurrentMonth =
                 date.getMonth() === currentMonth.getMonth();
               const dateStr = formatDate(date);
-              const hasReportData = hasReport(date);
               const report = emotionLogs.find((log) => log.date === dateStr);
               const emotionImageUrl = getEmotionImageUrl(report?.emotion_card);
               const isSelected = selectedDate === dateStr;
 
+              // 該当月以外の日付は表示しない
+              if (!isCurrentMonth) {
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      width: '40px',
+                      height: '60px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  />
+                );
+              }
+
               return (
                 <button
                   key={index}
-                  onClick={() => {
-                    if (isCurrentMonth) {
-                      handleDateClick(dateStr);
-                    }
-                  }}
+                  onClick={() => handleDateClick(dateStr)}
                   style={{
                     width: '40px',
                     height: '60px',
                     borderRadius: borderRadius.small,
                     backgroundColor: colors.background.white,
-                    color: isCurrentMonth
-                      ? colors.text.primary
-                      : colors.text.secondary,
+                    color: colors.text.primary,
                     fontSize: fontSize.large,
-                    cursor: isCurrentMonth ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
