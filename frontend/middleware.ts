@@ -2,7 +2,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  console.log('=== Middleware実行開始 ===', request.nextUrl.pathname);
   const { pathname } = request.nextUrl;
 
   // 認証が必要なパス（(authed)グループ）
@@ -24,15 +23,6 @@ export async function middleware(request: NextRequest) {
 
   // Firebase ID Tokenをクッキーから取得
   const idToken = request.cookies.get('firebase-id-token')?.value;
-
-  // デバッグログ（開発環境のみ、必要時のみ）
-  if (process.env.NODE_ENV === 'development') {
-    console.log('=== Middleware Debug ===');
-    console.log('Pathname:', pathname);
-    console.log('ID Token exists:', !!idToken);
-    console.log('Is protected path:', isProtectedPath);
-    console.log('Is public path:', isPublicPath);
-  }
 
   let isAuthenticated = false;
   if (idToken) {
@@ -70,19 +60,8 @@ export async function middleware(request: NextRequest) {
 
   // 認証が必要なパスへのアクセス
   if (isProtectedPath) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(
-        'Protected path accessed:',
-        pathname,
-        'isAuthenticated:',
-        isAuthenticated,
-      );
-    }
     if (!isAuthenticated) {
       // 認証されていない場合はログインページにリダイレクト
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Redirecting to login page from:', pathname);
-      }
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
@@ -108,14 +87,12 @@ export async function middleware(request: NextRequest) {
 
         if (!hasSubscription) {
           // サブスクリプション未登録の場合はプライシングページにリダイレクト
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Redirecting to pricing page: no subscription');
-          }
           return NextResponse.redirect(new URL('/pricing', request.url));
         }
 
         // サブスクリプション登録済みの場合、/appにアクセスした際はセットアップチェック
-        if (pathname === '/app') {
+        // ただし、設定ページやその他の管理ページは除外
+        if (pathname === '/app' || pathname === '/app/') {
           const childrenResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/children`,
             {
