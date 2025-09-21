@@ -15,6 +15,7 @@ from app.api.v1.endpoints.auth import router as auth_router
 from app.utils.error_handlers import register_error_handlers
 from app.api.v1.endpoints.emotion_color_api import router as emotion_color_router
 from app.api.v1.endpoints.emotion_api import router as emotion_router
+from app.api.v1.endpoints.emotion_analysis_api import router as emotion_analysis_router
 from app.api.v1.endpoints.stripe_api import router as stripe_router
 from app.api.v1.endpoints.roleplay import router as roleplay_router
 
@@ -84,5 +85,6 @@ app.include_router(new_voice_router, prefix="/api/v1")
 app.include_router(children_router, prefix="/api/v1/children")
 app.include_router(emotion_router)
 app.include_router(emotion_color_router)
+app.include_router(emotion_analysis_router)
 app.include_router(stripe_router)
 app.include_router(roleplay_router, prefix="/api/v1/roleplay")

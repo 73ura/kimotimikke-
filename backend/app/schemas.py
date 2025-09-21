@@ -99,6 +99,74 @@ class CheckoutSessionResponse(BaseModel):
 
 
 # -------------------
+# 感情パターン分析用スキーマ
+# -------------------
+
+class EmotionFrequency(BaseModel):
+    """感情の頻度データ"""
+    emotion_id: str
+    emotion_label: str
+    count: int
+    percentage: float
+    color: str
+
+
+class IntensityDistribution(BaseModel):
+    """強度分布データ"""
+    intensity_id: int
+    count: int
+    percentage: float
+
+
+
+
+class WeeklyPattern(BaseModel):
+    """週間パターンデータ"""
+    day_of_week: int  # 0=月曜日, 6=日曜日
+    emotion_counts: dict[str, int]  # {emotion_id: count}
+
+
+class EmotionTrend(BaseModel):
+    """感情のトレンドデータ"""
+    emotion_id: str
+    emotion_label: str
+    trend: str  # "increasing", "decreasing", "stable"
+    change_percentage: float
+
+
+class ParentFeedback(BaseModel):
+    """親向けフィードバック"""
+    summary: str
+    insights: list[str]
+    recommendations: list[str]
+    positive_aspects: list[str]
+    areas_for_attention: list[str]
+
+
+class EmotionAnalysisResponse(BaseModel):
+    """感情パターン分析結果"""
+    child_id: str
+    child_name: str
+    analysis_period: str  # "過去7日間", "過去30日間"など
+    total_records: int
+    
+    # 基本統計
+    emotion_frequencies: list[EmotionFrequency]
+    intensity_distribution: list[IntensityDistribution]
+    
+    # パターン分析
+    weekly_patterns: list[WeeklyPattern]
+    emotion_trends: list[EmotionTrend]
+    
+    # 親向けフィードバック
+    feedback: ParentFeedback
+    
+    # メタデータ
+    analysis_date: str
+    confidence_score: float  # 分析の信頼度 (0.0-1.0)
+
+
+# -------------------
 # 音声用スキーマ
 # -------------------
 
