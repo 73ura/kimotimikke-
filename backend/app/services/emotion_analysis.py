@@ -282,29 +282,53 @@ class EmotionAnalysisService:
             top_emotion = emotion_frequencies[0]
             insights.append(f"最も多く記録された感情は「{top_emotion.emotion_label}」です（{top_emotion.percentage}%）")
             
-            # ポジティブな感情の場合
-            positive_emotions = ["うれしい", "たのしい", "わくわく", "きんちょう", "どきどき"]
+            # 感情の分類
+            positive_emotions = ["うれしい", "たのしい", "わくわく", "きんちょう", "どきどき", "はりきって"]
+            neutral_emotions = ["ふつう", "へいき", "おだやか"]
+            challenging_emotions = ["かなしい", "おこっている", "こわい", "いらいら", "しんぱい", "つかれている"]
+            
             if any(emotion in top_emotion.emotion_label for emotion in positive_emotions):
                 positive_aspects.append(f"「{top_emotion.emotion_label}」の感情が多く見られ、お子さんは前向きな気持ちで過ごしているようです")
-            else:
-                areas_for_attention.append(f"「{top_emotion.emotion_label}」の感情が多く記録されています。お子さんとの対話を増やしてみてください")
+                recommendations.append("お子さんの前向きな気持ちを大切に、その感情を共有してあげてください")
+            elif any(emotion in top_emotion.emotion_label for emotion in neutral_emotions):
+                insights.append("お子さんは落ち着いた気持ちで過ごしているようです")
+            elif any(emotion in top_emotion.emotion_label for emotion in challenging_emotions):
+                areas_for_attention.append(f"「{top_emotion.emotion_label}」の感情が多く記録されています")
+                recommendations.append("お子さんが感じている気持ちに寄り添い、安心できる環境を作ってあげてください")
         
         # 強度分布を分析
         high_intensity_count = sum(d.count for d in intensity_distribution if d.intensity_id >= 3)
+        low_intensity_count = sum(d.count for d in intensity_distribution if d.intensity_id == 1)
+        
         if high_intensity_count > 0:
             high_intensity_percentage = (high_intensity_count / total_records) * 100
             if high_intensity_percentage > 50:
                 insights.append(f"感情の強度が高い記録が{high_intensity_percentage:.1f}%を占めています")
-                recommendations.append("感情が高ぶっている時は、落ち着くための時間を作ってあげてください")
+                recommendations.append("感情が高ぶっている時は、深呼吸や静かな時間を作ってあげてください")
+            elif high_intensity_percentage > 30:
+                insights.append(f"時々感情が高ぶることがあります（{high_intensity_percentage:.1f}%）")
+                recommendations.append("感情の変化に気づいたら、お子さんと一緒に気持ちを整理してみてください")
+        
+        if low_intensity_count > 0:
+            low_intensity_percentage = (low_intensity_count / total_records) * 100
+            if low_intensity_percentage > 60:
+                insights.append("お子さんは比較的落ち着いた感情で過ごしているようです")
+                positive_aspects.append("感情の起伏が少なく、安定した気持ちで過ごせているようです")
         
         
         # 週間パターンを分析
         weekday_emotions = sum(sum(pattern.emotion_counts.values()) for pattern in weekly_patterns[:5])
         weekend_emotions = sum(sum(pattern.emotion_counts.values()) for pattern in weekly_patterns[5:])
         
-        if weekday_emotions > weekend_emotions * 1.5:
-            insights.append("平日により多くの感情記録があります")
-            recommendations.append("平日の生活リズムがお子さんの感情に影響している可能性があります")
+        if weekday_emotions > 0 and weekend_emotions > 0:
+            if weekday_emotions > weekend_emotions * 1.5:
+                insights.append("平日により多くの感情記録があります")
+                recommendations.append("平日の生活リズムがお子さんの感情に影響している可能性があります。学校や習い事での出来事を聞いてみてください")
+            elif weekend_emotions > weekday_emotions * 1.5:
+                insights.append("週末により多くの感情記録があります")
+                recommendations.append("週末の時間を大切に、家族との時間でお子さんの気持ちを確認してみてください")
+            else:
+                insights.append("平日と週末で感情記録のバランスが取れています")
         
         # トレンドを分析
         increasing_emotions = [t for t in emotion_trends if t.trend == "increasing"]
