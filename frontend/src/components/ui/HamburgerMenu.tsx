@@ -19,7 +19,6 @@ export default function HamburgerMenu({
   className = '',
   style = {},
   position = 'right',
-  width = '300px',
 }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -33,7 +32,6 @@ export default function HamburgerMenu({
     has_subscription,
     status,
     is_trial,
-    trial_expires_at,
     loading: subLoading,
   } = useSubscription();
 
@@ -239,7 +237,7 @@ export default function HamburgerMenu({
           <MenuItem onClick={() => handleNavigation('/app/faq')}>FAQ</MenuItem>
 
           {/* 設定 */}
-          <MenuItem onClick={() => handleNavigation('/app/setup')}>
+          <MenuItem onClick={() => handleNavigation('/app/setting')}>
             設定
           </MenuItem>
 
@@ -306,6 +304,11 @@ export default function HamburgerMenu({
 
           {/* カスタムコンテンツ */}
           {children}
+
+          {/* ホームに戻る */}
+          <MenuItem onClick={() => handleNavigation('/app')}>
+            ホームに戻る
+          </MenuItem>
 
           {/* ログアウト */}
           <MenuItem
