@@ -793,6 +793,15 @@ export interface ParentFeedback {
   areas_for_attention: string[];
 }
 
+export interface DayOfWeekPattern {
+  day_of_week: string;
+  emotion_frequencies: EmotionFrequency[];
+  total_records: number;
+  avg_intensity: number;
+  dominant_emotion: string;
+  dominant_emotion_percentage: number;
+}
+
 export interface VoiceTextAnalysis {
   keyword_frequency: {
     top_keywords: Array<{
@@ -837,6 +846,7 @@ export interface EmotionAnalysisResponse {
   emotion_trends: EmotionTrend[];
   feedback: ParentFeedback;
   voice_analysis: VoiceTextAnalysis | null;
+  day_of_week_patterns: DayOfWeekPattern[];
   analysis_date: string;
   confidence_score: number;
 }

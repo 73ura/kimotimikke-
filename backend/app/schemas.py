@@ -143,6 +143,16 @@ class ParentFeedback(BaseModel):
     areas_for_attention: list[str]
 
 
+class DayOfWeekPattern(BaseModel):
+    """曜日パターン分析結果"""
+    day_of_week: str  # "月曜日", "火曜日", etc.
+    emotion_frequencies: list[EmotionFrequency]
+    total_records: int
+    avg_intensity: float
+    dominant_emotion: str
+    dominant_emotion_percentage: float
+
+
 class VoiceTextAnalysis(BaseModel):
     """音声テキスト分析結果"""
     keyword_frequency: dict
@@ -172,6 +182,9 @@ class EmotionAnalysisResponse(BaseModel):
     
     # 音声テキスト分析
     voice_analysis: VoiceTextAnalysis | None = None
+    
+    # 曜日パターン分析
+    day_of_week_patterns: list[DayOfWeekPattern] = []
     
     # メタデータ
     analysis_date: str

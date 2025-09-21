@@ -1,5 +1,6 @@
 'use client';
 
+import DayOfWeekChart from '@/components/emotion/DayOfWeekChart';
 import {
   HamburgerMenu,
   KokoronDefault,
@@ -726,6 +727,33 @@ export default function EmotionAnalysisPage() {
                               </div>
                             </div>
                           )}
+                        </div>
+                      )}
+
+                    {/* 曜日パターン分析結果 */}
+                    {analysis.day_of_week_patterns &&
+                      analysis.day_of_week_patterns.length > 0 && (
+                        <div
+                          style={{
+                            backgroundColor: colors.background.light,
+                            borderRadius: borderRadius.medium,
+                            padding: spacing.lg,
+                            marginBottom: spacing.lg,
+                          }}
+                        >
+                          <h3
+                            style={{
+                              color: colors.text.primary,
+                              fontSize: fontSize.large,
+                              fontWeight: 'bold',
+                              marginBottom: spacing.md,
+                            }}
+                          >
+                            📅 曜日別の感情パターン
+                          </h3>
+                          <DayOfWeekChart
+                            patterns={analysis.day_of_week_patterns}
+                          />
                         </div>
                       )}
                   </div>

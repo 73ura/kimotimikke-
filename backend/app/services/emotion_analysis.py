@@ -21,6 +21,7 @@ from app.schemas import (
     EmotionTrend,
     ParentFeedback,
     VoiceTextAnalysis,
+    DayOfWeekPattern,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,6 +90,9 @@ class EmotionAnalysisService:
             )
             voice_analysis = VoiceTextAnalysis(**voice_analysis_result)
             
+            # 曜日パターン分析を実行
+            day_of_week_patterns = await self._analyze_day_of_week_patterns(emotion_logs)
+            
             # 信頼度スコア計算
             confidence_score = self._calculate_confidence_score(len(emotion_logs), days)
             
@@ -103,6 +107,7 @@ class EmotionAnalysisService:
                 emotion_trends=emotion_trends,
                 feedback=feedback,
                 voice_analysis=voice_analysis,
+                day_of_week_patterns=day_of_week_patterns,
                 analysis_date=end_date.strftime("%Y-%m-%d"),
                 confidence_score=confidence_score
             )
@@ -366,6 +371,84 @@ class EmotionAnalysisService:
             positive_aspects=positive_aspects[:3],  # 最大3件
             areas_for_attention=areas_for_attention[:3]  # 最大3件
         )
+
+    async def _analyze_day_of_week_patterns(self, emotion_logs: List[EmotionLog]) -> List[DayOfWeekPattern]:
+        """曜日パターン分析"""
+        if not emotion_logs:
+            return []
+        
+        # 曜日名のマッピング
+        day_names = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"]
+        
+        # 曜日別にデータをグループ化（JST変換）
+        from zoneinfo import ZoneInfo
+        
+        day_groups = {}
+        for log in emotion_logs:
+            # UTC時間をJSTに変換
+            jst_time = log.created_at.astimezone(ZoneInfo('Asia/Tokyo'))
+            day_of_week = jst_time.weekday()  # 0=月曜日, 6=日曜日
+            if day_of_week not in day_groups:
+                day_groups[day_of_week] = []
+            day_groups[day_of_week].append(log)
+        
+        patterns = []
+        for day_of_week, logs in day_groups.items():
+            if not logs:
+                continue
+                
+            # 感情頻度を計算
+            emotion_counts = defaultdict(int)
+            intensity_sum = 0
+            
+            for log in logs:
+                emotion_counts[log.emotion_card.label] += 1
+                intensity_sum += log.intensity.id  # idが強度レベルを表す
+            
+            # 感情頻度データを作成
+            total_records = len(logs)
+            emotion_frequencies = []
+            for emotion_label, count in emotion_counts.items():
+                # 実際の感情カードの色を取得
+                emotion_card = None
+                for log in logs:
+                    if log.emotion_card.label == emotion_label:
+                        emotion_card = log.emotion_card
+                        break
+                
+                color = emotion_card.color if emotion_card else "#FF6B6B"
+                
+                emotion_frequencies.append(EmotionFrequency(
+                    emotion_id=str(hash(emotion_label)),  # 簡易ID生成
+                    emotion_label=emotion_label,
+                    count=count,
+                    percentage=round(count / total_records * 100, 1),
+                    color=color
+                ))
+            
+            # 感情頻度でソート
+            emotion_frequencies.sort(key=lambda x: x.count, reverse=True)
+            
+            # 平均強度を計算
+            avg_intensity = round(intensity_sum / total_records, 1)
+            
+            # 支配的感情を取得
+            dominant_emotion = emotion_frequencies[0].emotion_label if emotion_frequencies else "不明"
+            dominant_emotion_percentage = emotion_frequencies[0].percentage if emotion_frequencies else 0.0
+            
+            patterns.append(DayOfWeekPattern(
+                day_of_week=day_names[day_of_week],
+                emotion_frequencies=emotion_frequencies,
+                total_records=total_records,
+                avg_intensity=avg_intensity,
+                dominant_emotion=dominant_emotion,
+                dominant_emotion_percentage=dominant_emotion_percentage
+            ))
+        
+        # 曜日順にソート（月曜日から日曜日）
+        patterns.sort(key=lambda x: day_names.index(x.day_of_week))
+        
+        return patterns
 
     def _calculate_confidence_score(self, record_count: int, days: int) -> float:
         """分析の信頼度スコアを計算"""
