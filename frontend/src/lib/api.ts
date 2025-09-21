@@ -753,3 +753,133 @@ export const getRoleplaySession = async (
     throw error;
   }
 };
+
+// ===================
+// 感情パターン分析API
+// ===================
+
+// 感情分析結果の型定義
+export interface EmotionFrequency {
+  emotion_id: string;
+  emotion_label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface IntensityDistribution {
+  intensity_id: number;
+  count: number;
+  percentage: number;
+}
+
+export interface WeeklyPattern {
+  day_of_week: number;
+  emotion_counts: Record<string, number>;
+}
+
+export interface EmotionTrend {
+  emotion_id: string;
+  emotion_label: string;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  change_percentage: number;
+}
+
+export interface ParentFeedback {
+  summary: string;
+  insights: string[];
+  recommendations: string[];
+  positive_aspects: string[];
+  areas_for_attention: string[];
+}
+
+export interface EmotionAnalysisResponse {
+  child_id: string;
+  child_name: string;
+  analysis_period: string;
+  total_records: number;
+  emotion_frequencies: EmotionFrequency[];
+  intensity_distribution: IntensityDistribution[];
+  weekly_patterns: WeeklyPattern[];
+  emotion_trends: EmotionTrend[];
+  feedback: ParentFeedback;
+  analysis_date: string;
+  confidence_score: number;
+}
+
+// 子供の感情パターン分析
+export const analyzeChildEmotions = async (
+  childId: string,
+  days: number = 30,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/emotion-analysis/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result as EmotionAnalysisResponse;
+  } catch (error) {
+    console.error('Analyze child emotions error:', error);
+    throw error;
+  }
+};
+
+// 感情分析サマリー取得
+export const getEmotionAnalysisSummary = async (
+  days: number = 30,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/emotion-analysis/summary?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get emotion analysis summary error:', error);
+    throw error;
+  }
+};
