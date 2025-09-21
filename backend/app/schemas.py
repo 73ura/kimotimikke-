@@ -171,6 +171,17 @@ class KeywordMatchingResult(BaseModel):
     recommendations: list[str]
 
 
+class GeminiAnalysisResult(BaseModel):
+    """Gemini AI分析結果"""
+    total_voice_notes: int
+    analysis_period: str
+    emotional_insights: str  # 感情に関する洞察
+    behavioral_patterns: str  # 行動パターンの分析
+    parent_guidance: str  # 親へのガイダンス
+    concerns_and_strengths: str  # 心配事と強み
+    next_steps: str  # 次のステップの提案
+
+
 class VoiceTextAnalysis(BaseModel):
     """音声テキスト分析結果"""
     keyword_frequency: dict

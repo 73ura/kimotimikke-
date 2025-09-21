@@ -986,3 +986,57 @@ export const analyzeKeywordMatches = async (
     throw error;
   }
 };
+
+// ===================
+// Gemini AI分析API
+// ===================
+
+export interface GeminiAnalysisResult {
+  total_voice_notes: number;
+  analysis_period: string;
+  emotional_insights: string;
+  behavioral_patterns: string;
+  developmental_observations: string;
+  parent_guidance: string;
+  concerns_and_strengths: string;
+  next_steps: string;
+}
+
+// Gemini AI分析実行
+export const analyzeWithGemini = async (
+  childId: string,
+  firebaseUser: User,
+  days: number = 30,
+): Promise<GeminiAnalysisResult> => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/gemini-ai/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Analyze with Gemini AI error:', error);
+    throw error;
+  }
+};

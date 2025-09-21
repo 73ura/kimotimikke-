@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useChildren } from '@/hooks/useChildren';
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis';
+import { useGeminiAnalysis } from '@/hooks/useGeminiAnalysis';
 import {
   borderRadius,
   colors,
@@ -30,6 +31,18 @@ export default function EmotionAnalysisPage() {
 
   const { analysis, loading, error, lastUpdated, refetch, forceRefresh } =
     useEmotionAnalysis(selectedChildId || undefined, analysisDays);
+
+  const {
+    analysis: geminiAnalysis,
+    loading: geminiLoading,
+    error: geminiError,
+    lastUpdated: geminiLastUpdated,
+    forceRefresh: geminiForceRefresh,
+  } = useGeminiAnalysis(
+    selectedChildId || undefined,
+    analysisDays,
+    firebaseUser,
+  );
 
   const handleBack = () => {
     router.push('/app');
@@ -756,6 +769,261 @@ export default function EmotionAnalysisPage() {
                           />
                         </div>
                       )}
+
+                    {/* Gemini AI分析結果 */}
+                    {geminiAnalysis && (
+                      <div
+                        style={{
+                          backgroundColor: colors.background.light,
+                          borderRadius: borderRadius.medium,
+                          padding: spacing.lg,
+                          marginBottom: spacing.lg,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: spacing.md,
+                          }}
+                        >
+                          <h3
+                            style={{
+                              color: colors.text.primary,
+                              fontSize: fontSize.large,
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            🤖 AI深層分析
+                          </h3>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: spacing.sm,
+                            }}
+                          >
+                            {geminiLastUpdated && (
+                              <span
+                                style={{
+                                  color: colors.text.secondary,
+                                  fontSize: fontSize.small,
+                                }}
+                              >
+                                最終更新: {geminiLastUpdated}
+                              </span>
+                            )}
+                            <button
+                              onClick={geminiForceRefresh}
+                              disabled={geminiLoading}
+                              style={{
+                                padding: `${spacing.xs} ${spacing.sm}`,
+                                backgroundColor: colors.primary,
+                                color: colors.background.white,
+                                border: 'none',
+                                borderRadius: borderRadius.small,
+                                fontSize: fontSize.small,
+                                cursor: geminiLoading
+                                  ? 'not-allowed'
+                                  : 'pointer',
+                                opacity: geminiLoading ? 0.6 : 1,
+                              }}
+                            >
+                              {geminiLoading ? '分析中...' : '更新'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {geminiError && (
+                          <div
+                            style={{
+                              color: colors.text.error,
+                              backgroundColor: colors.background.white,
+                              padding: spacing.md,
+                              borderRadius: borderRadius.small,
+                              marginBottom: spacing.md,
+                            }}
+                          >
+                            エラー: {geminiError}
+                          </div>
+                        )}
+
+                        {geminiLoading ? (
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              padding: spacing.xl,
+                            }}
+                          >
+                            <Spinner />
+                            <span
+                              style={{
+                                marginLeft: spacing.sm,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              AI分析中...
+                            </span>
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: spacing.lg,
+                            }}
+                          >
+                            {/* 感情に関する洞察 */}
+                            <div
+                              style={{
+                                backgroundColor: colors.background.white,
+                                padding: spacing.md,
+                                borderRadius: borderRadius.small,
+                              }}
+                            >
+                              <h4
+                                style={{
+                                  color: colors.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                💭 感情に関する洞察
+                              </h4>
+                              <p
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.small,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {geminiAnalysis.emotional_insights}
+                              </p>
+                            </div>
+
+                            {/* 行動パターンの分析 */}
+                            <div
+                              style={{
+                                backgroundColor: colors.background.white,
+                                padding: spacing.md,
+                                borderRadius: borderRadius.small,
+                              }}
+                            >
+                              <h4
+                                style={{
+                                  color: colors.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                🎯 行動パターンの分析
+                              </h4>
+                              <p
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.small,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {geminiAnalysis.behavioral_patterns}
+                              </p>
+                            </div>
+
+                            {/* 親へのガイダンス */}
+                            <div
+                              style={{
+                                backgroundColor: colors.background.white,
+                                padding: spacing.md,
+                                borderRadius: borderRadius.small,
+                              }}
+                            >
+                              <h4
+                                style={{
+                                  color: colors.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                👨‍👩‍👧‍👦 親へのガイダンス
+                              </h4>
+                              <p
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.small,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {geminiAnalysis.parent_guidance}
+                              </p>
+                            </div>
+
+                            {/* 心配事と強み */}
+                            <div
+                              style={{
+                                backgroundColor: colors.background.white,
+                                padding: spacing.md,
+                                borderRadius: borderRadius.small,
+                              }}
+                            >
+                              <h4
+                                style={{
+                                  color: colors.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                ⚖️ 心配事と強み
+                              </h4>
+                              <p
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.small,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {geminiAnalysis.concerns_and_strengths}
+                              </p>
+                            </div>
+
+                            {/* 次のステップの提案 */}
+                            <div
+                              style={{
+                                backgroundColor: colors.background.white,
+                                padding: spacing.md,
+                                borderRadius: borderRadius.small,
+                              }}
+                            >
+                              <h4
+                                style={{
+                                  color: colors.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                🚀 次のステップの提案
+                              </h4>
+                              <p
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.small,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {geminiAnalysis.next_steps}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
