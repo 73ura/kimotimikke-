@@ -396,6 +396,40 @@ export const updateChildProfile = async (
   }
 };
 
+// 子どものプロフィール削除
+export const deleteChildProfile = async (
+  childId: string,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/children/${childId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Delete child profile error:', error);
+    throw error;
+  }
+};
+
 // 強度一覧取得
 export const getIntensities = async (firebaseUser: User) => {
   try {

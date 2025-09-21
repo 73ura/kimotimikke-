@@ -382,3 +382,27 @@ async def update_child(
     except ValueError as e:
         logger.error("Invalid birth_date format", exc_info=e)
         return None
+
+
+async def delete_child(
+    db: AsyncSession,
+    *,
+    child_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> bool:
+    """子どものプロフィールを削除"""
+    try:
+        # 子供を取得して権限チェック
+        child = await get_child_by_id(db, child_id)
+        if not child or child.user_id != user_id:
+            return False
+
+        # 子供を削除
+        await db.delete(child)
+        await db.commit()
+        return True
+
+    except SQLAlchemyError as e:
+        await db.rollback()
+        logger.error("delete_child failed", exc_info=e)
+        return False
