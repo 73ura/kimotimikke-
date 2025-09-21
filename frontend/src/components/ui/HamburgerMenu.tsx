@@ -246,6 +246,11 @@ export default function HamburgerMenu({
             レポート
           </MenuItem>
 
+          {/* 感情分析 */}
+          <MenuItem onClick={() => handleNavigation('/app/emotion-analysis')}>
+            感情分析
+          </MenuItem>
+
           {/* ロールプレイ */}
           <MenuItem onClick={() => handleNavigation('/app/roleplay')}>
             ロールプレイ
