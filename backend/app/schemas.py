@@ -143,6 +143,15 @@ class ParentFeedback(BaseModel):
     areas_for_attention: list[str]
 
 
+class VoiceTextAnalysis(BaseModel):
+    """音声テキスト分析結果"""
+    keyword_frequency: dict
+    topics: dict
+    language_features: dict
+    total_voice_notes: int
+    analysis_period: str
+
+
 class EmotionAnalysisResponse(BaseModel):
     """感情パターン分析結果"""
     child_id: str
@@ -160,6 +169,9 @@ class EmotionAnalysisResponse(BaseModel):
     
     # 親向けフィードバック
     feedback: ParentFeedback
+    
+    # 音声テキスト分析
+    voice_analysis: VoiceTextAnalysis | None = None
     
     # メタデータ
     analysis_date: str

@@ -605,6 +605,129 @@ export default function EmotionAnalysisPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* 音声テキスト分析結果 */}
+                    {analysis.voice_analysis &&
+                      analysis.voice_analysis.total_voice_notes > 0 && (
+                        <div
+                          style={{
+                            backgroundColor: colors.background.light,
+                            borderRadius: borderRadius.medium,
+                            padding: spacing.lg,
+                            marginBottom: spacing.lg,
+                          }}
+                        >
+                          <h3
+                            style={{
+                              color: colors.text.primary,
+                              fontSize: fontSize.large,
+                              fontWeight: 'bold',
+                              marginBottom: spacing.md,
+                            }}
+                          >
+                            🎤 音声記録の分析
+                          </h3>
+
+                          {/* キーワード頻度 */}
+                          {analysis.voice_analysis.keyword_frequency
+                            .top_keywords.length > 0 && (
+                            <div style={{ marginBottom: spacing.lg }}>
+                              <h4
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                よく使われる言葉
+                              </h4>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: spacing.sm,
+                                }}
+                              >
+                                {analysis.voice_analysis.keyword_frequency.top_keywords
+                                  .slice(0, 10)
+                                  .map((keyword, index) => (
+                                    <span
+                                      key={index}
+                                      style={{
+                                        backgroundColor: colors.primary,
+                                        color: colors.text.white,
+                                        padding: `${spacing.xs} ${spacing.sm}`,
+                                        borderRadius: borderRadius.small,
+                                        fontSize: fontSize.small,
+                                      }}
+                                    >
+                                      {keyword.word} ({keyword.count})
+                                    </span>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* トピック分析 */}
+                          {analysis.voice_analysis.topics.top_topics.length >
+                            0 && (
+                            <div style={{ marginBottom: spacing.lg }}>
+                              <h4
+                                style={{
+                                  color: colors.text.primary,
+                                  fontSize: fontSize.base,
+                                  fontWeight: 'bold',
+                                  marginBottom: spacing.sm,
+                                }}
+                              >
+                                話している内容
+                              </h4>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: spacing.sm,
+                                }}
+                              >
+                                {analysis.voice_analysis.topics.top_topics.map(
+                                  (topic, index) => (
+                                    <div
+                                      key={index}
+                                      style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: spacing.sm,
+                                        backgroundColor:
+                                          colors.background.white,
+                                        borderRadius: borderRadius.small,
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          color: colors.text.primary,
+                                          fontSize: fontSize.small,
+                                        }}
+                                      >
+                                        {topic.topic}
+                                      </span>
+                                      <span
+                                        style={{
+                                          color: colors.text.secondary,
+                                          fontSize: fontSize.small,
+                                        }}
+                                      >
+                                        {topic.percentage}%
+                                      </span>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                   </div>
                 )}
               </div>

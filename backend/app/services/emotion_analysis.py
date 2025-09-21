@@ -12,6 +12,7 @@ from sqlalchemy import select, and_, func
 from sqlalchemy.orm import selectinload
 
 from app.models import EmotionLog, EmotionCard, Child, Intensity
+from app.services.voice_text_analysis import VoiceTextAnalysisService
 from app.schemas import (
     EmotionAnalysisResponse,
     EmotionFrequency,
@@ -19,6 +20,7 @@ from app.schemas import (
     WeeklyPattern,
     EmotionTrend,
     ParentFeedback,
+    VoiceTextAnalysis,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,6 +82,13 @@ class EmotionAnalysisService:
                 len(emotion_logs)
             )
             
+            # 音声テキスト分析を実行
+            voice_analysis_service = VoiceTextAnalysisService(self.db)
+            voice_analysis_result = await voice_analysis_service.analyze_voice_notes(
+                child_id, user_id, days
+            )
+            voice_analysis = VoiceTextAnalysis(**voice_analysis_result)
+            
             # 信頼度スコア計算
             confidence_score = self._calculate_confidence_score(len(emotion_logs), days)
             
@@ -93,6 +102,7 @@ class EmotionAnalysisService:
                 weekly_patterns=weekly_patterns,
                 emotion_trends=emotion_trends,
                 feedback=feedback,
+                voice_analysis=voice_analysis,
                 analysis_date=end_date.strftime("%Y-%m-%d"),
                 confidence_score=confidence_score
             )

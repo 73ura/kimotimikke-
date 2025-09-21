@@ -793,6 +793,39 @@ export interface ParentFeedback {
   areas_for_attention: string[];
 }
 
+export interface VoiceTextAnalysis {
+  keyword_frequency: {
+    top_keywords: Array<{
+      word: string;
+      count: number;
+      percentage: number;
+    }>;
+    total_words: number;
+    unique_words: number;
+  };
+  topics: {
+    top_topics: Array<{
+      topic: string;
+      count: number;
+      percentage: number;
+    }>;
+    total_categories: number;
+  };
+  language_features: {
+    total_characters: number;
+    total_sentences: number;
+    total_words: number;
+    unique_words: number;
+    avg_sentence_length: number;
+    avg_words_per_sentence: number;
+    vocabulary_richness: number;
+    emotion_density: number;
+    avg_voice_note_length: number;
+  };
+  total_voice_notes: number;
+  analysis_period: string;
+}
+
 export interface EmotionAnalysisResponse {
   child_id: string;
   child_name: string;
@@ -803,6 +836,7 @@ export interface EmotionAnalysisResponse {
   weekly_patterns: WeeklyPattern[];
   emotion_trends: EmotionTrend[];
   feedback: ParentFeedback;
+  voice_analysis: VoiceTextAnalysis | null;
   analysis_date: string;
   confidence_score: number;
 }
