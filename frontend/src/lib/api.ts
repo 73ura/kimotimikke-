@@ -927,3 +927,62 @@ export const getEmotionAnalysisSummary = async (
     throw error;
   }
 };
+
+// ===================
+// キーワードマッチング分析API
+// ===================
+
+export interface KeywordMatch {
+  keyword: string;
+  category: string;
+  count: number;
+  percentage: number;
+  examples: string[];
+}
+
+export interface KeywordMatchingResult {
+  total_voice_notes: number;
+  analysis_period: string;
+  keyword_matches: KeywordMatch[];
+  insights: string[];
+  recommendations: string[];
+}
+
+// キーワードマッチング分析実行
+export const analyzeKeywordMatches = async (
+  childId: string,
+  firebaseUser: User,
+  days: number = 30,
+): Promise<KeywordMatchingResult> => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/keyword-matching/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Analyze keyword matches error:', error);
+    throw error;
+  }
+};

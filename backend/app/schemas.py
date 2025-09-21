@@ -153,6 +153,24 @@ class DayOfWeekPattern(BaseModel):
     dominant_emotion_percentage: float
 
 
+class KeywordMatch(BaseModel):
+    """キーワードマッチング結果"""
+    keyword: str
+    category: str  # "positive", "negative", "concern", "achievement", etc.
+    count: int
+    percentage: float
+    examples: list[str]  # マッチしたテキストの例
+
+
+class KeywordMatchingResult(BaseModel):
+    """キーワードマッチング分析結果"""
+    total_voice_notes: int
+    analysis_period: str
+    keyword_matches: list[KeywordMatch]
+    insights: list[str]
+    recommendations: list[str]
+
+
 class VoiceTextAnalysis(BaseModel):
     """音声テキスト分析結果"""
     keyword_frequency: dict
