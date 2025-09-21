@@ -213,11 +213,6 @@ export default function HamburgerMenu({
             保護者向けTips
           </MenuItem>
 
-          {/* レポートページの見かた */}
-          <MenuItem onClick={() => handleNavigation('/app/report-guide')}>
-            レポートページの見かた
-          </MenuItem>
-
           {/* 感情教育について */}
           <MenuItem onClick={() => handleNavigation('/app/emotion-education')}>
             感情教育について
@@ -246,9 +241,21 @@ export default function HamburgerMenu({
             レポート
           </MenuItem>
 
+          {/* レポートガイド */}
+          <MenuItem onClick={() => handleNavigation('/app/report-guide')}>
+            💡レポートガイド
+          </MenuItem>
+
           {/* 感情分析 */}
           <MenuItem onClick={() => handleNavigation('/app/emotion-analysis')}>
             感情分析
+          </MenuItem>
+
+          {/* 感情分析ガイド */}
+          <MenuItem
+            onClick={() => handleNavigation('/app/emotion-analysis-guide')}
+          >
+            💡感情分析ガイド
           </MenuItem>
 
           {/* ロールプレイ */}
