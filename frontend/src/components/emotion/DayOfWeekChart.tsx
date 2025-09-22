@@ -85,7 +85,7 @@ const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ patterns }) => {
         display: true,
         color: '#ffffff',
         font: {
-          weight: 'bold',
+          weight: 'bold' as const,
           size: 12,
         },
         formatter: (value: number, context: any) => {

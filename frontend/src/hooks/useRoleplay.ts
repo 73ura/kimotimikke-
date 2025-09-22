@@ -102,7 +102,7 @@ export const useRoleplay = (childId?: string) => {
   };
 
   // 感情選択
-  const selectEmotion = (emotionId: string | undefined) => {
+  const selectEmotion = (emotionId: string | null) => {
     setRoleplayState((prev) => ({
       ...prev,
       selectedEmotion: emotionId,

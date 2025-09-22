@@ -552,7 +552,7 @@ export default function RoleplayPage() {
           open={!!selectedEmotion}
           onClose={async () => {
             setShowAdvice(false);
-            selectEmotion(undefined); // 感情選択をリセット
+            selectEmotion(null); // 感情選択をリセット
 
             // 体験済みのシナリオの場合はセッション上書き保存＆終了
             if (
@@ -606,7 +606,7 @@ export default function RoleplayPage() {
               <button
                 onClick={async () => {
                   setShowAdvice(false);
-                  selectEmotion(undefined); // 感情選択をリセット
+                  selectEmotion(null); // 感情選択をリセット
 
                   // セッション完了
                   try {
@@ -670,7 +670,7 @@ export default function RoleplayPage() {
               <button
                 onClick={() => {
                   setShowAdvice(false);
-                  selectEmotion(undefined); // 感情選択をリセット
+                  selectEmotion(null); // 感情選択をリセット
                 }}
                 style={{
                   marginTop: spacing.lg,
