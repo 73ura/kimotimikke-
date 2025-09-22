@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ChildProvider } from '@/contexts/ChildContext';
 
 export default function RootLayout({
   children,
@@ -11,7 +12,7 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <AuthProvider>
-          {children}
+          <ChildProvider>{children}</ChildProvider>
         </AuthProvider>
       </body>
     </html>

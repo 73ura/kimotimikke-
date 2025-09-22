@@ -93,3 +93,38 @@ async def update_child(
     except Exception as e:
         logging.error(f"Failed to update child profile: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/{child_id}")
+async def delete_child(
+    child_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """子どものプロフィールを削除"""
+    try:
+        # 権限チェック（自分の子供かどうか）
+        child = await crud.get_child_by_id(db, child_id)
+        if not child:
+            raise HTTPException(status_code=404, detail="Child not found")
+        
+        if child.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this child")
+
+        # 子供を削除
+        success = await crud.delete_child(
+            db,
+            child_id=child_id,
+            user_id=current_user.id,
+        )
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to delete child")
+        
+        return {"success": True, "message": "Child deleted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to delete child profile: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

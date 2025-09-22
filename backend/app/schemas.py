@@ -16,7 +16,7 @@ from pydantic import (
 
 
 # -------------------
-# 認証・ユーザー系
+# 認証・ユーザー用スキーマ
 # -------------------
 class Token(BaseModel):
     id_token: str
@@ -38,7 +38,7 @@ class UserResponse(UserBase):
 
 
 # -------------------
-# 子供系スキーマ
+# 子供用スキーマ
 # -------------------
 class ChildBase(BaseModel):
     nickname: str
@@ -99,7 +99,129 @@ class CheckoutSessionResponse(BaseModel):
 
 
 # -------------------
-# 音声系スキーマ
+# 感情パターン分析用スキーマ
+# -------------------
+
+class EmotionFrequency(BaseModel):
+    """感情の頻度データ"""
+    emotion_id: str
+    emotion_label: str
+    count: int
+    percentage: float
+    color: str
+
+
+class IntensityDistribution(BaseModel):
+    """強度分布データ"""
+    intensity_id: int
+    count: int
+    percentage: float
+
+
+
+
+class WeeklyPattern(BaseModel):
+    """週間パターンデータ"""
+    day_of_week: int  # 0=月曜日, 6=日曜日
+    emotion_counts: dict[str, int]  # {emotion_id: count}
+
+
+class EmotionTrend(BaseModel):
+    """感情のトレンドデータ"""
+    emotion_id: str
+    emotion_label: str
+    trend: str  # "increasing", "decreasing", "stable"
+    change_percentage: float
+
+
+class ParentFeedback(BaseModel):
+    """親向けフィードバック"""
+    summary: str
+    insights: list[str]
+    recommendations: list[str]
+    positive_aspects: list[str]
+    areas_for_attention: list[str]
+
+
+class DayOfWeekPattern(BaseModel):
+    """曜日パターン分析結果"""
+    day_of_week: str  # "月曜日", "火曜日", etc.
+    emotion_frequencies: list[EmotionFrequency]
+    total_records: int
+    avg_intensity: float
+    dominant_emotion: str
+    dominant_emotion_percentage: float
+
+
+class KeywordMatch(BaseModel):
+    """キーワードマッチング結果"""
+    keyword: str
+    category: str  # "positive", "negative", "concern", "achievement", etc.
+    count: int
+    percentage: float
+    examples: list[str]  # マッチしたテキストの例
+
+
+class KeywordMatchingResult(BaseModel):
+    """キーワードマッチング分析結果"""
+    total_voice_notes: int
+    analysis_period: str
+    keyword_matches: list[KeywordMatch]
+    insights: list[str]
+    recommendations: list[str]
+
+
+class GeminiAnalysisResult(BaseModel):
+    """Gemini AI分析結果"""
+    total_voice_notes: int
+    analysis_period: str
+    emotional_insights: str  # 感情に関する洞察
+    behavioral_patterns: str  # 行動パターンの分析
+    parent_guidance: str  # 親へのガイダンス
+    concerns_and_strengths: str  # 心配事と強み
+    next_steps: str  # 次のステップの提案
+
+
+class VoiceTextAnalysis(BaseModel):
+    """音声テキスト分析結果"""
+    keyword_frequency: dict
+    topics: dict
+    language_features: dict
+    total_voice_notes: int
+    analysis_period: str
+
+
+class EmotionAnalysisResponse(BaseModel):
+    """感情パターン分析結果"""
+    child_id: str
+    child_name: str
+    analysis_period: str  # "過去7日間", "過去30日間"など
+    total_records: int
+    
+    # 基本統計
+    emotion_frequencies: list[EmotionFrequency]
+    intensity_distribution: list[IntensityDistribution]
+    
+    # パターン分析
+    weekly_patterns: list[WeeklyPattern]
+    emotion_trends: list[EmotionTrend]
+    
+    # 親向けフィードバック
+    feedback: ParentFeedback
+    
+    # 音声テキスト分析
+    voice_analysis: VoiceTextAnalysis | None = None
+    
+    # 曜日パターン分析
+    day_of_week_patterns: list[DayOfWeekPattern] = []
+    
+    # メタデータ
+    analysis_date: str
+    confidence_score: float  # 分析の信頼度 (0.0-1.0)
+
+
+# -------------------
+# 音声用スキーマ
 # -------------------
 
 # 現状エンドポイントは音声のみをpresignする想定
@@ -271,3 +393,68 @@ class VoiceTranscribeResponse(StrictModel):
 
 class SessionStatusRequest(BaseModel):
     session_id: str
+
+
+# -------------------
+# ロールプレイ用スキーマ
+# -------------------
+class RoleplayScenarioResponse(BaseModel):
+    id: UUID
+    title: str
+    description: Optional[str] = None
+    color: str
+    scenario_content: str
+    image_url: Optional[str] = None
+    emotion_types: list[str]
+    keywords: list[str]
+    age_range_min: int
+    age_range_max: int
+    difficulty_level: int
+    is_active: bool
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplayAdviceResponse(BaseModel):
+    id: UUID
+    scenario_id: UUID
+    emotion_id: str
+    advice_text: str
+    advice_type: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplaySessionRequest(BaseModel):
+    child_id: UUID
+    scenario_id: UUID
+    emotion_log_id: Optional[UUID] = None
+    selected_emotion_id: Optional[str] = None
+
+
+class RoleplaySessionResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    child_id: UUID
+    scenario_id: UUID
+    emotion_log_id: Optional[UUID] = None
+    selected_emotion_id: Optional[str] = None
+    session_duration: Optional[int] = None
+    completion_status: str
+    user_rating: Optional[int] = None
+    user_feedback: Optional[str] = None
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleplaySessionUpdateRequest(BaseModel):
+    selected_emotion_id: Optional[str] = None
+    session_duration: Optional[int] = None
+    completion_status: Optional[Literal["started", "completed", "abandoned"]] = None
+    user_rating: Optional[int] = Field(None, ge=1, le=5)
+    user_feedback: Optional[str] = None

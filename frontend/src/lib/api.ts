@@ -2,7 +2,9 @@
 import { loadStripe } from '@stripe/stripe-js';
 import { User } from 'firebase/auth';
 
-// Stripe決済検証関数
+// ===================
+// Stripe決済検証関連API
+// ===================
 export const verifyPayment = async (sessionId: string, firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken(true);
@@ -93,7 +95,10 @@ export const redirectToStripeCheckout = async (sessionId: string) => {
 // サブスクリプション状態取得
 export const getSubscriptionStatus = async () => {};
 
-// 子どものプロフィール作成
+// ===================
+// 子ども管理関連API
+// ===================
+
 export const createChild = async (
   childData: {
     nickname: string;
@@ -195,7 +200,9 @@ export const getChildrenCount = async (firebaseUser: User) => {
   }
 };
 
-// 感情ログ一覧取得
+// ===================
+// 感情記録関連API
+// ===================
 export const getEmotionLogs = async (
   firebaseUser: User,
   child_id?: string,
@@ -389,6 +396,40 @@ export const updateChildProfile = async (
   }
 };
 
+// 子どものプロフィール削除
+export const deleteChildProfile = async (
+  childId: string,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/children/${childId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Delete child profile error:', error);
+    throw error;
+  }
+};
+
 // 強度一覧取得
 export const getIntensities = async (firebaseUser: User) => {
   try {
@@ -416,6 +457,586 @@ export const getIntensities = async (firebaseUser: User) => {
     return result;
   } catch (error) {
     console.error('Get intensities error:', error);
+    throw error;
+  }
+};
+
+// ===================
+// ロールプレイ関連API
+// ===================
+
+// ロールプレイシナリオ一覧取得
+export const getRoleplayScenarios = async (
+  firebaseUser: User,
+  childAge?: number,
+  difficultyLevel?: number,
+  limit: number = 50,
+  offset: number = 0,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    let url = `${API_BASE_URL}/api/v1/roleplay/scenarios?limit=${limit}&offset=${offset}`;
+    if (childAge) {
+      url += `&child_age=${childAge}`;
+    }
+    if (difficultyLevel) {
+      url += `&difficulty_level=${difficultyLevel}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get roleplay scenarios error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイシナリオ詳細取得
+export const getRoleplayScenario = async (
+  scenarioId: string,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/roleplay/scenarios/${scenarioId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get roleplay scenario error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイアドバイス取得
+export const getRoleplayAdvice = async (
+  scenarioId: string,
+  emotionId: string,
+  firebaseUser: User,
+) => {
+  try {
+    console.log('=== getRoleplayAdvice API呼び出し ===');
+    console.log('scenarioId:', scenarioId);
+    console.log('emotionId:', emotionId);
+
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const url = `${API_BASE_URL}/api/v1/roleplay/advice?scenario_id=${scenarioId}&emotion_id=${emotionId}`;
+    console.log('API URL:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    console.log('API Response:', result);
+    return result;
+  } catch (error) {
+    console.error('Get roleplay advice error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイセッション作成
+export const createRoleplaySession = async (
+  sessionData: {
+    child_id: string;
+    scenario_id: string;
+    emotion_log_id?: string;
+    selected_emotion_id?: string;
+  },
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/roleplay/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(sessionData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Create roleplay session error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイセッション更新
+export const updateRoleplaySession = async (
+  sessionId: string,
+  updateData: {
+    session_duration?: number;
+    completion_status?: 'started' | 'completed' | 'abandoned';
+    user_rating?: number;
+    user_feedback?: string;
+  },
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/roleplay/sessions/${sessionId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(updateData),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Update roleplay session error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイセッション一覧取得
+export const getRoleplaySessions = async (
+  firebaseUser: User,
+  childId?: string,
+  limit: number = 50,
+  offset: number = 0,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    let url = `${API_BASE_URL}/api/v1/roleplay/sessions?limit=${limit}&offset=${offset}`;
+    if (childId) {
+      url += `&child_id=${childId}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get roleplay sessions error:', error);
+    throw error;
+  }
+};
+
+// ロールプレイセッション詳細取得
+export const getRoleplaySession = async (
+  sessionId: string,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/roleplay/sessions/${sessionId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get roleplay session error:', error);
+    throw error;
+  }
+};
+
+// ===================
+// 感情パターン分析API
+// ===================
+
+// 感情分析結果の型定義
+export interface EmotionFrequency {
+  emotion_id: string;
+  emotion_label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface IntensityDistribution {
+  intensity_id: number;
+  count: number;
+  percentage: number;
+}
+
+export interface WeeklyPattern {
+  day_of_week: number;
+  emotion_counts: Record<string, number>;
+}
+
+export interface EmotionTrend {
+  emotion_id: string;
+  emotion_label: string;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  change_percentage: number;
+}
+
+export interface ParentFeedback {
+  summary: string;
+  insights: string[];
+  recommendations: string[];
+  positive_aspects: string[];
+  areas_for_attention: string[];
+}
+
+export interface DayOfWeekPattern {
+  day_of_week: string;
+  emotion_frequencies: EmotionFrequency[];
+  total_records: number;
+  avg_intensity: number;
+  dominant_emotion: string;
+  dominant_emotion_percentage: number;
+}
+
+export interface VoiceTextAnalysis {
+  keyword_frequency: {
+    top_keywords: Array<{
+      word: string;
+      count: number;
+      percentage: number;
+    }>;
+    total_words: number;
+    unique_words: number;
+  };
+  topics: {
+    top_topics: Array<{
+      topic: string;
+      count: number;
+      percentage: number;
+    }>;
+    total_categories: number;
+  };
+  language_features: {
+    total_characters: number;
+    total_sentences: number;
+    total_words: number;
+    unique_words: number;
+    avg_sentence_length: number;
+    avg_words_per_sentence: number;
+    vocabulary_richness: number;
+    emotion_density: number;
+    avg_voice_note_length: number;
+  };
+  total_voice_notes: number;
+  analysis_period: string;
+}
+
+export interface EmotionAnalysisResponse {
+  child_id: string;
+  child_name: string;
+  analysis_period: string;
+  total_records: number;
+  emotion_frequencies: EmotionFrequency[];
+  intensity_distribution: IntensityDistribution[];
+  weekly_patterns: WeeklyPattern[];
+  emotion_trends: EmotionTrend[];
+  feedback: ParentFeedback;
+  voice_analysis: VoiceTextAnalysis | null;
+  day_of_week_patterns: DayOfWeekPattern[];
+  analysis_date: string;
+  confidence_score: number;
+}
+
+// 子供の感情パターン分析
+export const analyzeChildEmotions = async (
+  childId: string,
+  days: number = 30,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/emotion-analysis/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result as EmotionAnalysisResponse;
+  } catch (error) {
+    console.error('Analyze child emotions error:', error);
+    throw error;
+  }
+};
+
+// 感情分析サマリー取得
+export const getEmotionAnalysisSummary = async (
+  days: number = 30,
+  firebaseUser: User,
+) => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/emotion-analysis/summary?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get emotion analysis summary error:', error);
+    throw error;
+  }
+};
+
+// ===================
+// キーワードマッチング分析API
+// ===================
+
+export interface KeywordMatch {
+  keyword: string;
+  category: string;
+  count: number;
+  percentage: number;
+  examples: string[];
+}
+
+export interface KeywordMatchingResult {
+  total_voice_notes: number;
+  analysis_period: string;
+  keyword_matches: KeywordMatch[];
+  insights: string[];
+  recommendations: string[];
+}
+
+// キーワードマッチング分析実行
+export const analyzeKeywordMatches = async (
+  childId: string,
+  firebaseUser: User,
+  days: number = 30,
+): Promise<KeywordMatchingResult> => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/keyword-matching/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Analyze keyword matches error:', error);
+    throw error;
+  }
+};
+
+// ===================
+// Gemini AI分析API
+// ===================
+
+export interface GeminiAnalysisResult {
+  total_voice_notes: number;
+  analysis_period: string;
+  emotional_insights: string;
+  behavioral_patterns: string;
+  developmental_observations: string;
+  parent_guidance: string;
+  concerns_and_strengths: string;
+  next_steps: string;
+}
+
+// Gemini AI分析実行
+export const analyzeWithGemini = async (
+  childId: string,
+  firebaseUser: User,
+  days: number = 30,
+): Promise<GeminiAnalysisResult> => {
+  try {
+    const idToken = await firebaseUser.getIdToken(true);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!API_BASE_URL) {
+      throw new Error('NEXT_PUBLIC_API_BASE_URL が設定されていません');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/gemini-ai/child/${childId}?days=${days}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Analyze with Gemini AI error:', error);
     throw error;
   }
 };

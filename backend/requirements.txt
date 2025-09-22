@@ -23,3 +23,5 @@ numpy==1.24.3
 # 音声処理
 ffmpeg-python==0.2.0
 pydub==0.25.1
+# Gemini AI
+google-generativeai==0.8.5
